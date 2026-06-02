@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>P&L BIKE</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <h2>P&L BIKE</h2>
+    <nav>
+      <button onclick="showSection('home')">Inicio</button>
+      <button onclick="showSection('trips')">Viajes</button>
+      <button onclick="showSection('profile')">Perfil</button>
+    </nav>
+  </header>
+
+  <!-- HOME -->
+  <section id="home" class="section active">
+    <h1>Mapa de Bicicletas</h1>
+    
+    <div class="map">
+      <p>Mapa próximamente</p>
+    </div>
+
+    <button class="primary-btn" onclick="rentBike()">Alquilar bici</button>
+  </section>
+
+  <!-- VIAJES -->
+  <section id="trips" class="section">
+    <h1>Mis viajes</h1>
+    <ul id="tripList"></ul>
+  </section>
+
+  <!-- PERFIL -->
+  <section id="profile" class="section">
+    <h1>Perfil</h1>
+    <p>Usuario: Lucas</p>
+    <p>Saldo: $500</p>
+  </section>
+
+  <script src="./js/app.js"></script>
+</body>
+</html>

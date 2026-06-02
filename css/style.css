@@ -1,0 +1,56 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color:rgba(221, 103, 6, 0.981);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  }
+
+.navbar {
+  background: #e08a11;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  
+}
+
+.navbar button {
+  font-size: larger;
+  margin-left: 30px;
+  padding: 15px 30px;
+  border-radius: 100px;
+  color: white;
+  background-color: #87520811;
+  cursor: pointer;      
+     
+}
+
+.section {
+  color: white;
+  display: none;
+  padding: 20px;
+}
+
+.active {
+  display: block;
+}
+
+.map {
+  height: 300px;
+  background: #dddddda4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+
+  padding: 10px 20px;
+  background: green;
+  color: white;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+
+}
