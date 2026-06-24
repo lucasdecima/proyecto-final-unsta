@@ -1,46 +1,373 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <title>P&L BIKE</title>
-  <link rel="stylesheet" href="./css/style.css">
+    <meta charset="UTF-8">
+    <title>P&L BIKE</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-  <!-- NAVBAR -->
-  <header class="navbar">
-    <h2>P&L BIKE</h2>
-    <nav>
-      <button onclick="showSection('home')">Inicio</button>
-      <button onclick="showSection('trips')">Viajes</button>
-      <button onclick="showSection('profile')">Perfil</button>
-    </nav>
-  </header>
+    <!-- Navbar -->
 
-  <!-- HOME -->
-  <section id="home" class="section active">
-    <h1>Mapa de Bicicletas</h1>
-    
-    <div class="map">
-      <p>Mapa próximamente</p>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+
+        <div class="container">
+
+            <a class="navbar-brand fw-bold" href="#">
+                🚲 P&L BIKE
+            </a>
+
+            <button class="navbar-toggler"
+                data-bs-toggle="collapse"
+                data-bs-target="#menu">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+            <div class="collapse navbar-collapse" id="menu">
+
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+                        <button class="btn btn-success"
+                            onclick="showSection('home')">
+                            Inicio
+                        </button>
+                    </li>
+
+                    <li class="nav-item ms-2">
+                        <button class="btn btn-success"
+                            onclick="showSection('viajes')">
+                            Viajes
+                        </button>
+                    </li>
+
+                    <li class="nav-item ms-2">
+                        <button class="btn btn-success"
+                            onclick="showSection('perfil')">
+                            Perfil
+                        </button>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <!-- HOME -->
+
+    <div id="home" class="container mt-4">
+
+        <div class="card shadow">
+
+            <div class="card-body text-center">
+
+                <h1>P&L BIKE</h1>
+
+                <p>
+                    Sistema de bicicletas urbanas
+                    de San Miguel de Tucumán
+                </p>
+
+<div id="mapa" class="border rounded p-4 bg-light mt-3"></div>     
+
+</div>
+
+
+
+
+
+
+              <button
+                  class="btn btn-success btn-lg mt-3"
+                  data-bs-toggle="modal"
+                  data-bs-target="#rentBikeModal">
+
+                  Alquilar Bicicleta
+
+              </button>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <button class="primary-btn" onclick="rentBike()">Alquilar bici</button>
-  </section>
+    <!-- VIAJES -->
 
-  <!-- VIAJES -->
-  <section id="trips" class="section">
-    <h1>Mis viajes</h1>
-    <ul id="tripList"></ul>
-  </section>
+    <div id="viajes"
+        class="container mt-4 d-none">
 
-  <!-- PERFIL -->
-  <section id="profile" class="section">
-    <h1>Perfil</h1>
-    <p>Usuario: Lucas</p>
-    <p>Saldo: $500</p>
-  </section>
+        <div class="card shadow">
 
-  <script src="./js/app.js"></script>
+            <div class="card-body">
+
+                <h2>Historial de Viajes</h2>
+
+                <table
+                    class="table table-striped mt-3">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+                            <th>Fecha</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>KM</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tripTable">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- PERFIL -->
+
+    <div id="perfil"
+        class="container mt-4 d-none">
+
+        <div class="card shadow">
+
+            <div class="card-body">
+
+                <h2>Mi Perfil</h2>
+
+                <p><strong>Usuario:</strong> Lucas</p>
+
+                <p><strong>Tiempo disponible hoy:</strong> 2 horas</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="js/app.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="modal fade"
+     id="rentBikeModal"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Alquilar Bicicleta
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Estación Origen
+                    </label>
+
+                    <select
+                        id="origen"
+                        class="form-select">
+
+                        <option value="Plaza Independencia">
+                            Plaza Independencia
+                        </option>
+
+                        <option value="Parque 9 de Julio">
+                            Parque 9 de Julio
+                        </option>
+
+                        <option value="Terminal">
+                            Terminal
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Estación Destino
+                    </label>
+
+                    <select
+                        id="destino"
+                        class="form-select">
+
+                        <option value="Parque 9 de Julio">
+                            Parque 9 de Julio
+                        </option>
+
+                        <option value="Terminal">
+                            Terminal
+                        </option>
+
+                        <option value="Plaza Independencia">
+                            Plaza Independencia
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div
+                    id="distanceInfo"
+                    class="alert alert-info">
+
+                    Distancia estimada: --
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    class="btn btn-success"
+                    onclick="rentBike()">
+
+                    Confirmar Alquiler
+
+                </button>
+
+            </div>
+            
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal Éxito -->
+<div class="modal fade"
+     id="successModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+
+                
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body text-center">
+
+                <h4>Alquiler realizado con éxito</h4>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-success"
+                    data-bs-dismiss="modal">
+
+                    Aceptar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<footer class="bg-success text-white text-center mt-auto">
+    
+  <div class="container p-4">
+
+    <div class="row">
+
+      <div class="col-lg-6 col-md-12 mb-4">
+        <h5 class="text-uppercase">🚲 P&L BIKE</h5>
+        <p>
+          Sistema de bicicletas urbanas de San Miguel de Tucumán.
+          Movilidad sostenible, rápida y accesible.
+        </p>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-4">
+        <h5 class="text-uppercase">Secciones</h5>
+
+        <ul class="list-unstyled mb-0">
+          <li><a href="#" class="text-white">Inicio</a></li>
+          <li><a href="#" class="text-white">Viajes</a></li>
+          <li><a href="#" class="text-white">Perfil</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-4">
+        <h5 class="text-uppercase">Contacto</h5>
+
+        <ul class="list-unstyled">
+          <li>Email: plbike@demo.com</li>
+          <li>Tucumán, Argentina</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="text-center p-3 bg-dark">
+    © 2026 P&L BIKE - Todos los derechos reservados
+  </div>
+</footer>
+
 </body>
+
+
 </html>
+

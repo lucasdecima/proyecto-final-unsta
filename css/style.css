@@ -1,56 +1,114 @@
+/* ===== Paleta P&L BIKE ===== */
+:root {
+    --pl-pine: #1F6F54;
+    --pl-pine-dark: #15503D;
+    --pl-amber: #F2A93B;
+    --pl-amber-dark: #D98E2A;
+    --pl-cream: #F6F4EC;
+    --pl-slate: #233029;
+}
+
+/* Fondo general y tipografía */
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color:rgba(221, 103, 6, 0.981);
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  }
-
-.navbar {
-  background: #e08a11;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  
+    background-color: var(--pl-cream);
+    color: var(--pl-slate);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.navbar button {
-  font-size: larger;
-  margin-left: 30px;
-  padding: 15px 30px;
-  border-radius: 100px;
-  color: white;
-  background-color: #87520811;
-  cursor: pointer;      
-     
+html, body {
+    height: 100%;
+}
+/* ===== Navbar ===== */
+.navbar.bg-success {
+    background-color: var(--pl-pine) !important;
 }
 
-.section {
-  color: white;
-  display: none;
-  padding: 20px;
+.navbar-brand {
+    letter-spacing: 0.02em;
 }
 
-.active {
-  display: block;
+/* ===== Botones verdes (Inicio / Viajes / Perfil / Confirmar alquiler) ===== */
+.btn-success {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--pl-pine);
+    --bs-btn-border-color: var(--pl-pine);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--pl-pine-dark);
+    --bs-btn-hover-border-color: var(--pl-pine-dark);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--pl-pine-dark);
+    --bs-btn-active-border-color: var(--pl-pine-dark);
+    --bs-btn-disabled-bg: var(--pl-pine);
+    --bs-btn-disabled-border-color: var(--pl-pine);
+    --bs-btn-focus-shadow-rgb: 31, 111, 84;
+    transition: background-color 0.15s ease-in-out;
 }
 
-.map {
-  height: 300px;
-  background: #dddddda4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
+/* Botón secundario (Cancelar) en tono neutro que combine con la paleta */
+.btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #6b6358;
+    --bs-btn-border-color: #6b6358;
+    --bs-btn-hover-bg: #564f46;
+    --bs-btn-hover-border-color: #564f46;
+    --bs-btn-active-bg: #564f46;
+    --bs-btn-active-border-color: #564f46;
 }
 
-.primary-btn {
+/* ===== Cartel de distancia estimada (acento ámbar) ===== */
+.alert-info {
+    --bs-alert-color: #6b4a14;
+    --bs-alert-bg: #fdf0d9;
+    --bs-alert-border-color: var(--pl-amber);
+}
 
-  padding: 10px 20px;
-  background: green;
-  color: white;
-  border-radius: 100px;
-  cursor: pointer;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 
+/* ===== Card principal ===== */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+}
+
+.card.shadow {
+    box-shadow: 0 0.5rem 1.5rem rgba(31, 111, 84, 0.12) !important;
+}
+
+/* Caja "Mapa próximamente" */
+.bg-light {
+    background-color: var(--pl-cream) !important;
+    border-color: var(--pl-pine) !important;
+    color: var(--pl-slate);
+}
+
+/* ===== Tabla de viajes ===== */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: #eef5f1;
+}
+
+.table thead th {
+    color: var(--pl-pine-dark);
+    border-bottom: 2px solid var(--pl-pine);
+}
+
+/* ===== Modal ===== */
+.modal-header {
+    border-bottom: 1px solid #e7e2d6;
+}
+
+.modal-footer {
+    border-top: 1px solid #e7e2d6;
+}
+
+.form-select:focus {
+    border-color: var(--pl-pine);
+    box-shadow: 0 0 0 0.25rem rgba(31, 111, 84, 0.2);
+}
+
+/* ===== Títulos ===== */
+h1, h2 {
+    color: var(--pl-pine-dark);
+    font-weight: 700;
 }
