@@ -1,3 +1,14 @@
+const usuario =
+    JSON.parse(
+        localStorage.getItem("usuarioLogueado")
+    );
+
+if (!usuario) {
+
+    window.location.href = "login.html";
+
+}
+
 const trips = [];
 
 
@@ -198,6 +209,10 @@ function renderTrips() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // Mostrar el usuario logueado en el perfil
+    document.getElementById("nombreUsuario").textContent =
+        usuario.nombre;
+
     document
         .getElementById("origen")
         .addEventListener("change", actualizarDistancia);
@@ -206,8 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById("destino")
         .addEventListener("change", actualizarDistancia);
 
-    // Calcula la distancia inicial apenas se abre el modal,
-    // según los valores ya seleccionados por defecto
     document
         .getElementById("rentBikeModal")
         .addEventListener("shown.bs.modal", actualizarDistancia);
