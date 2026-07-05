@@ -140,7 +140,19 @@ function rentBike() {
         return;
     }
 
-    const km = obtenerDistancia(origen, destino);
+
+    if (estaciones[origen].bicis === 0) {
+
+            mostrarModal(
+                "Sin disponibilidad",
+                "No hay bicicletas disponibles en esta estación.",
+                "warning"
+            );
+
+            return;
+        }
+
+        const km = obtenerDistancia(origen, destino);
 
     if (km === null) {
         alert("No hay distancia registrada para esa ruta");
