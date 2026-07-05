@@ -1,3 +1,42 @@
+
+function mostrarModal(titulo, mensaje, tipo = "success") {
+
+    const header = document.getElementById("messageHeader");
+    const title = document.getElementById("messageTitle");
+    const text = document.getElementById("messageText");
+
+    header.className = "modal-header text-white";
+
+    switch (tipo) {
+
+        case "success":
+            header.classList.add("bg-success");
+            break;
+
+        case "danger":
+            header.classList.add("bg-danger");
+            break;
+
+        case "warning":
+            header.classList.add("bg-warning");
+            break;
+
+        default:
+            header.classList.add("bg-primary");
+
+    }
+
+    title.textContent = titulo;
+    text.textContent = mensaje;
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("messageModal")
+    );
+
+    modal.show();
+
+    return modal;
+}
 function registrar() {
 
     const nombre =
@@ -11,7 +50,11 @@ function registrar() {
 
     if (!nombre || !email || !password) {
 
-        alert("Complete todos los campos.");
+        mostrarModal(
+            "Campos incompletos",
+            "Complete todos los campos.",
+            "warning"
+        );
 
         return;
     }
@@ -24,7 +67,11 @@ function registrar() {
 
     if (existe) {
 
-        alert("Ese correo ya está registrado.");
+        mostrarModal(
+    "Error",
+    "Ese correo ya está registrado.",
+    "danger"
+);
 
         return;
     }
@@ -42,10 +89,19 @@ function registrar() {
         JSON.stringify(usuarios)
     );
 
-    alert("Usuario registrado correctamente.");
+    const modal = mostrarModal(
+        "Registro exitoso",
+        "Usuario registrado correctamente.",
+        "success"
+    );
 
-    window.location.href = "login.html";
+    document
+        .getElementById("messageModal")
+        .addEventListener("hidden.bs.modal", () => {
 
+            window.location.href = "login.html";
+
+        }, { once: true });
 }
 
 
@@ -73,7 +129,11 @@ function login() {
 
     if (!usuario) {
 
-        alert("Usuario o contraseña incorrectos.");
+                mostrarModal(
+            "Acceso denegado",
+            "Usuario o contraseña incorrectos.",
+            "danger"
+        );      
 
         return;
 
@@ -87,7 +147,19 @@ function login() {
 
     );
 
-    window.location.href = "index.html";
+   mostrarModal(
+    "Bienvenido",
+    `Hola ${usuario.nombre}`,
+    "success"
+);
+
+document
+    .getElementById("messageModal")
+    .addEventListener("hidden.bs.modal", () => {
+
+        window.location.href = "index.html";
+
+    }, { once: true });
 
 }
 
