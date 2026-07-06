@@ -8,10 +8,10 @@ if (!usuario) {
     window.location.href = "login.html";
 
 }
-
-const trips = [];
-
-
+const trips =
+    JSON.parse(
+        localStorage.getItem(`trips_${usuario.email}`)
+    ) || [];
 const estaciones = {
     "Plaza Independencia": { bicis: 0 },
     "Parque 9 de Julio": { bicis: 0 },
@@ -185,8 +185,13 @@ function rentBike() {
 
     trips.push(viaje);
 
+    localStorage.setItem(
+        `trips_${usuario.email}`,
+        JSON.stringify(trips)
+    );
+    
     document.getElementById("cantidadViajes").textContent =
-    trips.length;
+        trips.length;
 
     estaciones[origen].bicis--;
     estaciones[destino].bicis++;
