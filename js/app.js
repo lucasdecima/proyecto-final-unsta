@@ -136,7 +136,12 @@ function rentBike() {
         document.getElementById("destino").value;
 
     if (origen === destino) {
-        alert("Elegí dos estaciones distintas");
+        mostrarModal(
+            "Ruta inválida",
+            "Elegí dos estaciones distintas.",
+            "warning"
+        );
+    
         return;
     }
 
@@ -154,10 +159,16 @@ function rentBike() {
 
         const km = obtenerDistancia(origen, destino);
 
-    if (km === null) {
-        alert("No hay distancia registrada para esa ruta");
-        return;
-    }
+        if (km === null) {
+
+            mostrarModal(
+                "Ruta no disponible",
+                "No hay distancia registrada para esa ruta.",
+                "danger"
+            );
+        
+            return;
+        }
 
     const viaje = {
 
@@ -173,6 +184,10 @@ function rentBike() {
     };
 
     trips.push(viaje);
+
+    document.getElementById("cantidadViajes").textContent =
+    trips.length;
+
     estaciones[origen].bicis--;
     estaciones[destino].bicis++;
     renderTrips();
@@ -205,6 +220,19 @@ function renderTrips() {
 
     table.innerHTML = "";
 
+    if (trips.length === 0) {
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    No hay viajes registrados.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
     trips.forEach(viaje => {
 
         table.innerHTML += `
@@ -221,9 +249,15 @@ function renderTrips() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Mostrar el usuario logueado en el perfil
+    // Mostrar el usuario logueado, Email y cantidad de viajes en el perfil
     document.getElementById("nombreUsuario").textContent =
-        usuario.nombre;
+    usuario.nombre;
+
+    document.getElementById("emailUsuario").textContent =
+    usuario.email;
+
+    document.getElementById("cantidadViajes").textContent =
+    trips.length;
 
     document
         .getElementById("origen")
@@ -239,4 +273,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     generarBicisAleatorias();
     renderEstaciones();
+    renderTrips();
 });
