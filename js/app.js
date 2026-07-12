@@ -12,14 +12,19 @@ const trips =
     JSON.parse(
         localStorage.getItem(`trips_${usuario.email}`)
     ) || [];
-const estaciones = {
-    "Plaza Independencia": { bicis: 0 },
-    "Parque 9 de Julio": { bicis: 0 },
-    "Terminal": { bicis: 0 }
-};
 
-// Distancias en km entre cada par de estaciones.
-// Se asume simétrica (A -> B = B -> A) para simplificar.
+
+let estaciones = 
+        JSON.parse(localStorage.getItem("estaciones"));
+if (!estaciones) {
+    estaciones = {
+        "Plaza Independencia": { bicis: 0 },
+        "Parque 9 de Julio": { bicis: 0 },
+        "Terminal": { bicis: 0 }
+    };
+}
+
+
 const distancias = {
     "Plaza Independencia": {
         "Parque 9 de Julio": 3.2,
@@ -100,6 +105,12 @@ function generarBicisAleatorias() {
     estaciones["Plaza Independencia"].bicis = Math.floor(Math.random() * 6) + 1;
     estaciones["Parque 9 de Julio"].bicis = Math.floor(Math.random() * 6) + 1;
     estaciones["Terminal"].bicis = Math.floor(Math.random() * 6) + 1;
+
+    localStorage.setItem(
+        "estaciones",
+        JSON.stringify(estaciones)
+    );
+
 }
 
 function actualizarDistancia() {
@@ -123,7 +134,7 @@ function actualizarDistancia() {
 
     info.textContent =
         km !== null
-            ? `Distancia estimada: ${km} km`
+            ? `Distancia estimada : ${km} km`
             : "Distancia no disponible para esta ruta";
 }
 
@@ -195,26 +206,81 @@ function rentBike() {
 
     estaciones[origen].bicis--;
     estaciones[destino].bicis++;
+
+    localStorage.setItem(
+        "estaciones",
+        JSON.stringify(estaciones)
+    );
+
+
     renderTrips();
+    actualizarEstadisticas();
     renderEstaciones();
 
-    // Cerrar modal de alquiler
-    const rentModal =
-        bootstrap.Modal.getInstance(
-            document.getElementById("rentBikeModal")
-        );
+const rentModal =
+    bootstrap.Modal.getInstance(
+        document.getElementById("rentBikeModal")
+    );
 
+if (rentModal) {
     rentModal.hide();
+}
 
-    // Mostrar modal de éxito
-    const successModal =
-        new bootstrap.Modal(
-            document.getElementById("successModal")
-        );
+// Mostrar el modal de éxito
+const successModal =
+    new bootstrap.Modal(
+        document.getElementById("successModal")
+    );
 
-    successModal.show();
+successModal.show();
+
 
 }
+    function actualizarEstadisticas() {
+
+        let km = 0;
+    
+        const contador = {};
+    
+        trips.forEach(viaje => {
+    
+            km += viaje.km;
+    
+            contador[viaje.origen] =
+                (contador[viaje.origen] || 0) + 1;
+    
+        });
+    
+        document.getElementById("kmTotales").textContent =
+            km.toFixed(1);
+    
+        if (trips.length > 0) {
+    
+            document.getElementById("ultimoViaje").textContent =
+                trips[trips.length - 1].fecha;
+    
+        }
+    
+        let favorita = "-";
+    
+        let max = 0;
+    
+        for (const estacion in contador) {
+    
+            if (contador[estacion] > max) {
+    
+                favorita = estacion;
+                max = contador[estacion];
+    
+            }
+    
+        }
+    
+        document.getElementById("estacionFavorita").textContent =
+            favorita;
+    
+    }
+
 
 function renderTrips() {
 
@@ -252,6 +318,37 @@ function renderTrips() {
     });
 }
 
+function filtrarViajes() {
+
+    const texto =
+        document.getElementById("buscarViaje")
+        .value
+        .toLowerCase();
+
+    const filas =
+        document.querySelectorAll("#tripTable tr");
+
+    filas.forEach(fila => {
+
+        if (
+            fila.textContent.toLowerCase().includes(texto)
+        ) {
+
+            fila.style.display = "";
+
+        }
+
+        else {
+
+            fila.style.display = "none";
+
+        }
+
+    });
+
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
     // Mostrar el usuario logueado, Email y cantidad de viajes en el perfil
@@ -276,7 +373,20 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById("rentBikeModal")
         .addEventListener("shown.bs.modal", actualizarDistancia);
 
-    generarBicisAleatorias();
-    renderEstaciones();
+        if (!localStorage.getItem("estaciones")) {
+
+            generarBicisAleatorias();
+        
+        };
+
+    document
+        .getElementById("buscarViaje")
+        .addEventListener(
+            "keyup",
+            filtrarViajes
+        );
+
     renderTrips();
+    actualizarEstadisticas();
+    renderEstaciones();
 });

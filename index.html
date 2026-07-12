@@ -116,7 +116,13 @@
             <div class="card-body">
 
                 <h2>Historial de Viajes</h2>
-
+                <div class="mb-3">
+                    <input 
+                        type="text"
+                        id="buscarViaje"
+                        class="form-control"
+                        placeholder="Buscar por origen o destino">
+                </div>
                 <table
                     class="table table-striped mt-3">
 
@@ -170,6 +176,25 @@
                     <p>
                         <strong>Viajes realizados:</strong>
                         <span id="cantidadViajes">0</span>
+                    </p>
+
+                    <hr>
+
+                    <h5>Estadísticas</h5>
+
+                    <p>
+                    <strong>Kilómetros recorridos:</strong>
+                    <span id="kmTotales">0</span> km
+                    </p>
+
+                    <p>
+                    <strong>Último viaje:</strong>
+                    <span id="ultimoViaje">Sin viajes</span>
+                    </p>
+
+                    <p>
+                    <strong>Estación más utilizada:</strong>
+                    <span id="estacionFavorita">-</span>
                     </p>
 
                     <p>
