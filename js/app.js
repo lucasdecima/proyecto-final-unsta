@@ -233,6 +233,13 @@ const successModal =
     );
 
 successModal.show();
+setTimeout(() => {
+
+    successModal.hide();
+
+    showSection("home");
+
+}, 2000);
 
 
 }
