@@ -147,25 +147,39 @@ function login() {
 
     );
 
-   mostrarModal(
+const footer =
+    document.getElementById("messageFooter");
+
+footer.classList.add("d-none");
+
+const modal = mostrarModal(
+    "",
     "Bienvenido",
-    `Hola ${usuario.nombre}`,
     "success"
 );
 
-document
-    .getElementById("messageModal")
-    .addEventListener("hidden.bs.modal", () => {
+setTimeout(() => {
 
-        window.location.href = "index.html";
+    modal.hide();
 
-    }, { once: true });
+    footer.classList.remove("d-none");
+
+    window.location.href = "index.html";
+
+}, 2000);
+}
+
+function cerrarSesion() {
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("logoutModal")
+    );
+
+    modal.show();
 
 }
 
-
-
-function cerrarSesion() {
+function confirmarCerrarSesion() {
 
     localStorage.removeItem("usuarioLogueado");
 

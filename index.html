@@ -18,7 +18,10 @@
 
         <div class="container">
 
-            <a class="navbar-brand fw-bold" href="#">
+            <a
+                class="navbar-brand fw-bold"
+                href="#"
+                onclick="showSection('home'); return false;">
                 🚲 P&L BIKE
             </a>
 
@@ -327,7 +330,7 @@
 
 </div>
 
-<!-- Modal Éxito -->
+<!-- Modal éxito -->
 <div class="modal fade"
      id="successModal"
      tabindex="-1">
@@ -401,7 +404,7 @@
 
 
 
-  <!-- Modal de Mensajes -->
+  <!-- Modal de mensajes -->
 <div class="modal fade" id="messageModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -434,11 +437,65 @@
         </div>
     </div>
 </div>
+
+
+
   <div class="text-center p-3 bg-dark">
     © 2026 P&L BIKE - Todos los derechos reservados
   </div>
 </footer>
+<!-- Modal Confirmar Cierre de Sesión -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
 
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    Cerrar sesión
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body text-center">
+
+                ¿Estás seguro que deseas cerrar la sesión?
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    class="btn btn-danger"
+                    onclick="confirmarCerrarSesion()">
+
+                    Sí, cerrar sesión
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 </body>
 
 

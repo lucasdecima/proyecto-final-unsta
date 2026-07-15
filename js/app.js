@@ -239,7 +239,7 @@ setTimeout(() => {
 
     showSection("home");
 
-}, 2000);
+}, 3500);
 
 
 }
