@@ -112,3 +112,22 @@ h1, h2 {
     color: var(--pl-pine-dark);
     font-weight: 700;
 }
+
+
+/* ===== Validaciones del formulario ===== */
+
+.validacion {
+
+    display: block;
+    font-size: 0.65rem;
+    color: #dc3545;
+    margin-top: 2px;
+    transition: color .3s ease;
+
+}
+
+.validacion.ok {
+
+    color: #198754;
+
+}

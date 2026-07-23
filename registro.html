@@ -31,41 +31,77 @@ Crear cuenta
 
 <div class="mb-3">
 
-<label>Nombre</label>
+    <label class="form-label">Nombre y apellido</label>
 
-<input
-id="nombre"
-class="form-control">
+    <input
+        id="nombre"
+        class="form-control"
+        placeholder="Ej.: Paula Barrionuevo">
 
-</div>
+    <small id="nombreLongitud" class="validacion">
+        ✖ Entre 3 y 30 caracteres
+    </small>
 
-<div class="mb-3">
-
-<label>Email</label>
-
-<input
-id="email"
-type="email"
-class="form-control">
+    <small id="nombreLetras" class="validacion">
+        ✖ Solo letras y espacios
+    </small>
 
 </div>
 
 <div class="mb-3">
 
-<label>Contraseña</label>
+    <label class="form-label">Email</label>
 
-<input
-id="password"
-type="password"
-class="form-control">
+    <input
+        id="email"
+        type="email"
+        class="form-control"
+        placeholder="Ej.: paula@email.com">
+
+    <small id="emailFormato" class="validacion">
+        ✖ Debe tener formato usuario@dominio.com
+    </small>
+
+    <small id="emailExiste" class="validacion">
+        ✖ Este correo ya está registrado
+    </small>
+
+</div>
+<div class="mb-3">
+
+    <label class="form-label">Contraseña</label>
+
+    <input
+        id="password"
+        type="password"
+        class="form-control"
+        placeholder="Ingrese una contraseña">
+
+    <small id="passLongitud" class="validacion">
+        ✖ Mínimo 8 caracteres
+    </small>
+
+    <small id="passMayuscula" class="validacion">
+        ✖ Al menos una mayúscula
+    </small>
+
+    <small id="passMinuscula" class="validacion">
+        ✖ Al menos una minúscula
+    </small>
+
+    <small id="passNumero" class="validacion">
+        ✖ Al menos un número
+    </small>
 
 </div>
 
 <button
-class="btn btn-success w-100"
-onclick="registrar()">
+    id="btnRegistrar"
+    class="btn btn-success w-100"
+    onclick="registrar()"
+    disabled>
 
-Registrarse
+    Registrarse
 
 </button>
 
