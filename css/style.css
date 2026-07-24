@@ -131,3 +131,35 @@ h1, h2 {
     color: #198754;
 
 }
+/* ===== Animaciones fondo =====*/
+body{
+    position: relative;
+    overflow-x: hidden;
+}
+
+.fondo-bicis{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bici{
+    position:absolute;
+    font-size:1.8rem;
+    opacity:.18;
+    animation: recorrer 35s linear infinite;
+}
+
+@keyframes recorrer{
+
+    from{
+        transform: translateX(-120vw);
+    }
+
+    to{
+        transform: translateX(120vw);
+    }
+
+}

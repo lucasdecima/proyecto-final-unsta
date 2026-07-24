@@ -355,7 +355,6 @@ function filtrarViajes() {
 
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
 
     // Mostrar el usuario logueado, Email y cantidad de viajes en el perfil

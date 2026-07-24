@@ -475,6 +475,45 @@ function confirmarCerrarSesion() {
 
 }
 
+function crearFondoBicis() {
+
+    const fondo = document.getElementById("fondoBicis");
+
+    if (!fondo) return;
+
+    fondo.innerHTML = "";
+
+    const filas = 12;
+    const espacioVertical = 8;
+    const espacioHorizontal = 6.5;
+
+    const columnas = Math.ceil(100 / espacioHorizontal) + 8;
+
+    for (let fila = 0; fila < filas; fila++) {
+
+        const offset = (fila % 2 === 0)
+            ? 0
+            : espacioHorizontal / 2;
+
+        for (let col = -4; col < columnas; col++) {
+
+            const bici = document.createElement("div");
+
+            bici.className = "bici";
+            bici.textContent = "🚲";
+
+            bici.style.top = `${4 + fila * espacioVertical}%`;
+            bici.style.left = `${col * espacioHorizontal + offset}%`;
+
+            const duracion = 35; 
+
+            bici.style.animationDelay =`${-(col * (duracion / columnas))}s`;
+            
+
+            fondo.appendChild(bici);
+        }
+    }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -504,5 +543,6 @@ document.addEventListener("DOMContentLoaded", () => {
             actualizarBotonRegistro();
         });
     }
+    crearFondoBicis();
 
 });
