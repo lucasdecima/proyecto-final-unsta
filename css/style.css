@@ -163,3 +163,96 @@ body{
     }
 
 }
+
+/* ===== Tarjetas de estaciones ===== */
+
+.card-estacion{
+
+    transition: all .25s ease;
+
+    cursor: pointer;
+
+}
+
+.card-estacion:hover{
+
+    transform: scale(1.04);
+
+    box-shadow: 0 12px 24px rgba(0,0,0,.18);
+
+}
+
+
+.estado-disponible{
+
+    background:#eaf7ef;
+
+    border:2px solid #4CAF50;
+
+}
+
+.estado-pocas{
+
+    background:#fff9e6;
+
+    border:2px solid #F2A93B;
+
+}
+
+.estado-vacia{
+
+    background:#fdecec;
+
+    border:2px solid #dc3545;
+
+}
+
+/* =====Footer =====*/
+
+footer{
+
+    margin-top:40px;
+    font-size:.90rem;
+
+}
+
+footer .container{
+
+    padding:20px 0 !important;
+
+}
+
+footer h5{
+
+    font-size:1rem;
+    margin-bottom:10px;
+
+}
+
+footer p,
+footer li,
+footer a{
+
+    margin-bottom:4px;
+    font-size:.85rem;
+
+}
+
+footer ul{
+
+    margin-bottom:0;
+
+}
+
+footer .row{
+
+    align-items:flex-start;
+
+}
+
+footer .text-center.p-3{
+
+    padding:10px !important;
+    font-size:.80rem;
+
+}

@@ -119,13 +119,47 @@
             <div class="card-body">
 
                 <h2>Historial de Viajes</h2>
-                <div class="mb-3">
-                    <input 
-                        type="text"
-                        id="buscarViaje"
-                        class="form-control"
-                        placeholder="Buscar por origen o destino">
+                
+
+                <div class="row mb-3">
+                    <div class="d-flex justify-content-end mb-3">
+
+                        <button
+                            class="btn btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteHistoryModal">
+                    
+                            🗑 Eliminar historial
+                    
+                        </button>
+                    
+                    </div>
+                    <div class="col-md-6">
+                        <input
+                            type="text"
+                            id="buscarViaje"
+                            class="form-control"
+                            placeholder="Buscar por origen o destino">
+                    </div>
+                
+                    <div class="col-md-6">
+                
+                        <select
+                            id="ordenViajes"
+                            class="form-select">
+                
+                            <option value="recientes">Fecha más reciente</option>
+                            <option value="antiguos">Fecha más antigua</option>
+                            <option value="kmMayor">Mayor distancia</option>
+                            <option value="kmMenor">Menor distancia</option>
+                
+                        </select>
+                
+                    </div>
+                
+
                 </div>
+                
                 <table
                     class="table table-striped mt-3">
 
@@ -182,9 +216,9 @@
                     </p>
 
                     <hr>
-
+                    
                     <h5>Estadísticas</h5>
-
+                    <br>
                     <p>
                     <strong>Kilómetros recorridos:</strong>
                     <span id="kmTotales">0</span> km
@@ -198,6 +232,21 @@
                     <p>
                     <strong>Estación más utilizada:</strong>
                     <span id="estacionFavorita">-</span>
+                    </p>
+                    
+                    <p>
+                        <strong>Viaje más largo:</strong>
+                        <span id="viajeMasLargo">0</span> km
+                    </p>
+                    
+                    <p>
+                        <strong>Promedio por viaje:</strong>
+                        <span id="promedioKm">0</span> km
+                    </p>
+                    
+                    <p>
+                        <strong>Estaciones utilizadas:</strong>
+                        <span id="estacionesUsadas">0</span>
                     </p>
 
                     <p>
@@ -331,31 +380,26 @@
 </div>
 
 <!-- Modal éxito -->
+<!-- Modal éxito -->
 <div class="modal fade"
      id="successModal"
-     tabindex="-1">
+     tabindex="-1"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
 
     <div class="modal-dialog modal-dialog-centered">
 
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
 
-            <div class="modal-header bg-success text-white">
+            <div class="modal-body bg-success text-white text-center py-5 rounded">
 
-                <h5 class="modal-title">
-                Alquiler confirmado
-                </h5>
-
-                <button
-                type="button"
-                class="btn-close btn-close-white"
-                data-bs-dismiss="modal">
-                </button>
-                
-            </div>
-
-            <div class="modal-body text-center">
-
-                <h4>Alquiler realizado con éxito</h4>
+                <p class="mb-0">
+                    ✔ Viaje confirmado
+                    <br>
+                    Tu bicicleta ya está lista.
+                    <br>
+                    ¡Disfrutá el recorrido!
+                </p>
 
             </div>
 
@@ -459,12 +503,11 @@
     </div>
 </div>
 
-
-
   <div class="text-center p-3 bg-dark">
     © 2026 P&L BIKE - Todos los derechos reservados
   </div>
 </footer>
+
 <!-- Modal Confirmar Cierre de Sesión -->
 <div class="modal fade" id="logoutModal" tabindex="-1">
 
@@ -507,6 +550,63 @@
                     onclick="confirmarCerrarSesion()">
 
                     Sí, cerrar sesión
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Modal Eliminar Historial -->
+<div
+    class="modal fade"
+    id="deleteHistoryModal"
+    tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-danger text-white">
+
+                <h5 class="modal-title">
+                    Eliminar historial
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body text-center">
+
+                ¿Deseás eliminar todos los viajes registrados?
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    class="btn btn-danger"
+                    onclick="eliminarHistorial()">
+
+                    Eliminar
 
                 </button>
 

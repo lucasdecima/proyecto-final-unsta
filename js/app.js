@@ -1,3 +1,7 @@
+//======================================================
+// VARIABLES GLOBALES
+//======================================================
+
 const usuario =
     JSON.parse(
         localStorage.getItem("usuarioLogueado")
@@ -13,6 +17,15 @@ const trips =
         localStorage.getItem(`trips_${usuario.email}`)
     ) || [];
 
+    trips.forEach(viaje => {
+
+        if (!viaje.timestamp) {
+    
+            viaje.timestamp = Date.now();
+    
+        }
+    
+    });
 
 let estaciones = 
         JSON.parse(localStorage.getItem("estaciones"));
@@ -40,6 +53,10 @@ const distancias = {
     }
 };
 
+//======================================================
+// FUNCIONES DE NAVEGACIÓN
+//======================================================
+
 function showSection(sectionId) {
 
     document
@@ -59,41 +76,99 @@ function showSection(sectionId) {
         .classList.remove("d-none");
 }
 
+//======================================================
+// MAPA Y ESTACIONES
+//======================================================
 
 function obtenerDistancia(origen, destino) {
     if (origen === destino) return 0;
     return distancias[origen]?.[destino] ?? null;
 }
+
+function obtenerEstadoEstacion(cantidad){
+
+    if(cantidad >= 3){
+
+        return{
+
+            texto:"🟢 Disponible",
+
+            textoClase:"text-success",
+
+            cardClase:"estado-disponible"
+
+        };
+
+    }
+
+    if(cantidad >= 1){
+
+        return{
+
+            texto:"🟡 Pocas bicicletas",
+
+            textoClase:"text-warning",
+
+            cardClase:"estado-pocas"
+
+        };
+
+    }
+
+    return{
+
+        texto:"🔴 Sin disponibilidad",
+
+        textoClase:"text-danger",
+
+        cardClase:"estado-vacia"
+
+    };
+
+}
+
 function renderEstaciones() {
 
     const mapa = document.getElementById("mapa");
+
+    const plaza =
+    obtenerEstadoEstacion(estaciones["Plaza Independencia"].bicis);
+
+    const parque =
+    obtenerEstadoEstacion(estaciones["Parque 9 de Julio"].bicis);
+
+    const terminal =
+    obtenerEstadoEstacion(estaciones["Terminal"].bicis);
 
     mapa.innerHTML = `
         <div class="row text-center">
 
             <div class="col-md-4">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm card-estacion ${plaza.cardClase}">
                     <div class="card-body">
                         <h5>📍 Plaza Independencia</h5>
                         <p>🚲 ${estaciones["Plaza Independencia"].bicis} bicicletas</p>
+                        <p class="${plaza.clase} fw-bold">${plaza.texto}</p>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm card-estacion ${parque.cardClase}">
                     <div class="card-body">
                         <h5>📍 Parque 9 de Julio</h5>
                         <p>🚲 ${estaciones["Parque 9 de Julio"].bicis} bicicletas</p>
+                        <p class="${parque.clase} fw-bold">${parque.texto}</p>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm card-estacion ${terminal.cardClase}">
                     <div class="card-body">
                         <h5>📍 Terminal</h5>
                         <p>🚲 ${estaciones["Terminal"].bicis} bicicletas</p>
+                        <p class="${terminal.clase} fw-bold">${terminal.texto}</p>
                     </div>
                 </div>
             </div>
@@ -138,6 +213,27 @@ function actualizarDistancia() {
             : "Distancia no disponible para esta ruta";
 }
 
+function guardarViajes() {
+
+    localStorage.setItem(
+        `trips_${usuario.email}`,
+        JSON.stringify(trips)
+    );
+
+}
+
+function guardarEstaciones() {
+
+    localStorage.setItem(
+        "estaciones",
+        JSON.stringify(estaciones)
+    );
+
+}
+//======================================================
+// ALQUILER DE BICICLETAS
+//======================================================
+
 function rentBike() {
 
     const origen =
@@ -181,25 +277,25 @@ function rentBike() {
             return;
         }
 
-    const viaje = {
+        const viaje = {
 
-        id: trips.length + 1,
-
-        fecha:
-            new Date()
-                .toLocaleString(),
-
-        origen,
-        destino,
-        km
-    };
+            id: trips.length + 1,
+        
+            fecha:
+                new Date().toLocaleString("es-AR"),
+        
+            timestamp:
+                Date.now(),
+        
+            origen,
+            destino,
+            km
+        
+        };
 
     trips.push(viaje);
 
-    localStorage.setItem(
-        `trips_${usuario.email}`,
-        JSON.stringify(trips)
-    );
+    guardarViajes();
     
     document.getElementById("cantidadViajes").textContent =
         trips.length;
@@ -207,13 +303,10 @@ function rentBike() {
     estaciones[origen].bicis--;
     estaciones[destino].bicis++;
 
-    localStorage.setItem(
-        "estaciones",
-        JSON.stringify(estaciones)
-    );
+    guardarEstaciones();
 
 
-    renderTrips();
+    ordenarViajes();
     actualizarEstadisticas();
     renderEstaciones();
 
@@ -243,15 +336,33 @@ setTimeout(() => {
 
 
 }
+
+//======================================================
+// PERFIL Y ESTADÍSTICAS
+//======================================================
+
+
     function actualizarEstadisticas() {
 
         let km = 0;
     
         const contador = {};
+        
+        let viajeMasLargo = 0;
+
+        const estacionesUtilizadas = new Set();
     
         trips.forEach(viaje => {
     
             km += viaje.km;
+            if (viaje.km > viajeMasLargo) {
+
+                viajeMasLargo = viaje.km;
+            
+            }
+            
+            estacionesUtilizadas.add(viaje.origen);
+            estacionesUtilizadas.add(viaje.destino);
     
             contador[viaje.origen] =
                 (contador[viaje.origen] || 0) + 1;
@@ -266,6 +377,11 @@ setTimeout(() => {
             document.getElementById("ultimoViaje").textContent =
                 trips[trips.length - 1].fecha;
     
+        } else {
+
+            document.getElementById("ultimoViaje").textContent =
+                "Sin viajes";
+        
         }
     
         let favorita = "-";
@@ -285,9 +401,33 @@ setTimeout(() => {
     
         document.getElementById("estacionFavorita").textContent =
             favorita;
+
+        document.getElementById("viajeMasLargo").textContent =
+            viajeMasLargo.toFixed(1);
+        
+        document.getElementById("promedioKm").textContent =
+            trips.length
+                ? (km / trips.length).toFixed(1)
+                : "0";
+        
+        document.getElementById("estacionesUsadas").textContent =
+            estacionesUtilizadas.size;
     
+        if (trips.length === 0) {
+
+            document.getElementById("kmTotales").textContent = "0";
+            document.getElementById("viajeMasLargo").textContent = "0";
+            document.getElementById("promedioKm").textContent = "0";
+            document.getElementById("estacionesUsadas").textContent = "0";
+            document.getElementById("estacionFavorita").textContent = "-";
+        
+        }
+        
     }
 
+//======================================================
+// HISTORIAL DE VIAJES
+//======================================================
 
 function renderTrips() {
 
@@ -355,6 +495,80 @@ function filtrarViajes() {
 
 }
 
+
+function ordenarViajes() {
+
+    const criterio =
+        document.getElementById("ordenViajes").value;
+
+    switch (criterio) {
+
+        case "recientes":
+
+        trips.sort((a, b) => b.timestamp - a.timestamp);
+
+        break;
+
+        case "antiguos":
+
+        trips.sort((a, b) => a.timestamp - b.timestamp);
+
+        break;
+        
+        case "kmMayor":
+
+            trips.sort(
+                (a, b) => b.km - a.km
+            );
+
+            break;
+
+        case "kmMenor":
+
+            trips.sort(
+                (a, b) => a.km - b.km
+            );
+
+            break;
+
+    }
+
+    renderTrips();
+
+}
+
+function eliminarHistorial() {
+
+    trips.length = 0;
+
+    guardarViajes();
+
+    renderTrips();
+    actualizarEstadisticas();
+
+    const modal =
+        bootstrap.Modal.getInstance(
+            document.getElementById("deleteHistoryModal")
+        );
+
+    if (modal) {
+
+        modal.hide();
+
+    }
+
+    mostrarModal(
+        "Historial eliminado",
+        "Todos los viajes fueron eliminados correctamente.",
+        "success"
+    );
+
+}
+
+//======================================================
+// INICIALIZACIÓN
+//======================================================
+
 document.addEventListener("DOMContentLoaded", () => {
 
     // Mostrar el usuario logueado, Email y cantidad de viajes en el perfil
@@ -395,4 +609,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTrips();
     actualizarEstadisticas();
     renderEstaciones();
+
+    document
+    .getElementById("ordenViajes")
+    .addEventListener(
+        "change",
+        ordenarViajes
+    );
 });
