@@ -148,7 +148,7 @@ function renderEstaciones() {
                     <div class="card-body">
                         <h5>📍 Plaza Independencia</h5>
                         <p>🚲 ${estaciones["Plaza Independencia"].bicis} bicicletas</p>
-                        <p class="${plaza.clase} fw-bold">${plaza.texto}</p>
+                        <p class="${plaza.textoClase} fw-bold">${plaza.texto}</p>
                     </div>
                 </div>
             </div>
@@ -158,7 +158,7 @@ function renderEstaciones() {
                     <div class="card-body">
                         <h5>📍 Parque 9 de Julio</h5>
                         <p>🚲 ${estaciones["Parque 9 de Julio"].bicis} bicicletas</p>
-                        <p class="${parque.clase} fw-bold">${parque.texto}</p>
+                        <p class="${parque.textoClase} fw-bold">${parque.texto}</p>
                     </div>
                 </div>
             </div>
@@ -168,7 +168,7 @@ function renderEstaciones() {
                     <div class="card-body">
                         <h5>📍 Terminal</h5>
                         <p>🚲 ${estaciones["Terminal"].bicis} bicicletas</p>
-                        <p class="${terminal.clase} fw-bold">${terminal.texto}</p>
+                        <p class="${terminal.textoClase} fw-bold">${terminal.texto}</p>
                     </div>
                 </div>
             </div>
@@ -514,7 +514,7 @@ function ordenarViajes() {
         trips.sort((a, b) => a.timestamp - b.timestamp);
 
         break;
-        
+
         case "kmMayor":
 
             trips.sort(
@@ -532,7 +532,7 @@ function ordenarViajes() {
             break;
 
     }
-
+    guardarViajes();
     renderTrips();
 
 }
