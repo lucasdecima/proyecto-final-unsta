@@ -368,8 +368,10 @@ function registrar() {
 
         nombre,
         email,
-        password
+        password,
 
+        fechaRegistro:
+        new Date().toLocaleDateString("es-AR")
     });
 
     localStorage.setItem(
@@ -435,26 +437,31 @@ function login() {
 
     );
 
-const footer =
-    document.getElementById("messageFooter");
-
-footer.classList.add("d-none");
-
-const modal = mostrarModal(
-    "",
-    "Bienvenido",
-    "success"
-);
-
-setTimeout(() => {
-
-    modal.hide();
-
-    footer.classList.remove("d-none");
-
-    window.location.href = "index.html";
-
-}, 2000);
+    const header = document.getElementById("messageHeader");
+    const footer = document.getElementById("messageFooter");
+    const closeButton = document.getElementById("messageClose");
+    
+    header.classList.add("d-none");
+    footer.classList.add("d-none");
+    closeButton.classList.add("d-none");
+    
+    const modal = mostrarModal(
+        "",
+        `👋 ¡Bienvenido, ${usuario.nombre}!`,
+        "success"
+    );
+    
+    setTimeout(() => {
+    
+        modal.hide();
+    
+        header.classList.remove("d-none");
+        footer.classList.remove("d-none");
+        closeButton.classList.remove("d-none");
+    
+        window.location.href = "index.html";
+    
+    }, 2000);
 }
 
 function cerrarSesion() {
@@ -544,5 +551,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     crearFondoBicis();
+    // Permitir enviar con la tecla Enter
+    document.addEventListener("keydown", (e) => {
+
+    if (e.key !== "Enter") return;
+
+    // Página de Login
+    if (document.getElementById("loginEmail")) {
+
+        login();
+        return;
+
+    }
+
+    // Página de Registro
+    if (document.getElementById("btnRegistrar")) {
+
+        const boton =
+            document.getElementById("btnRegistrar");
+
+        if (!boton.disabled) {
+
+            registrar();
+
+        }
+
+    }
+
+});
 
 });

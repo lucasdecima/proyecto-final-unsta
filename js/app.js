@@ -176,6 +176,35 @@ function renderEstaciones() {
         </div>
     `;
 }
+
+function actualizarSelectEstaciones() {
+
+    const origen =
+        document.getElementById("origen");
+
+    const destino =
+        document.getElementById("destino");
+
+    origen.innerHTML = "";
+    destino.innerHTML = "";
+
+    for (const nombre in estaciones) {
+
+        origen.innerHTML += `
+            <option value="${nombre}">
+                ${nombre} (${estaciones[nombre].bicis} disponibles)
+            </option>
+        `;
+
+        destino.innerHTML += `
+            <option value="${nombre}">
+                ${nombre} (${estaciones[nombre].bicis} disponibles)
+            </option>
+        `;
+    }
+
+}
+
 function generarBicisAleatorias() {
     estaciones["Plaza Independencia"].bicis = Math.floor(Math.random() * 6) + 1;
     estaciones["Parque 9 de Julio"].bicis = Math.floor(Math.random() * 6) + 1;
@@ -252,8 +281,7 @@ function rentBike() {
         return;
     }
 
-
-    if (estaciones[origen].bicis === 0) {
+        if (estaciones[origen].bicis === 0) {
 
             mostrarModal(
                 "Sin disponibilidad",
@@ -264,9 +292,20 @@ function rentBike() {
             return;
         }
 
-        const km = obtenerDistancia(origen, destino);
+        const boton = document.getElementById("btnAlquilar");
 
-        if (km === null) {
+        boton.disabled = true;
+
+        boton.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Alquilando bicicleta...
+        `;
+
+        setTimeout(()=>{
+
+            const km = obtenerDistancia(origen, destino);
+
+            if (km === null) {
 
             mostrarModal(
                 "Ruta no disponible",
@@ -274,8 +313,14 @@ function rentBike() {
                 "danger"
             );
         
+            boton.disabled = false;
+
+            boton.innerHTML = "Confirmar Alquiler";
             return;
+
         }
+
+        
 
         const viaje = {
 
@@ -304,7 +349,7 @@ function rentBike() {
     estaciones[destino].bicis++;
 
     guardarEstaciones();
-
+    actualizarSelectEstaciones();
 
     ordenarViajes();
     actualizarEstadisticas();
@@ -325,14 +370,17 @@ const successModal =
         document.getElementById("successModal")
     );
 
-successModal.show();
-setTimeout(() => {
+    successModal.show();
 
-    successModal.hide();
+    setTimeout(() => {
 
-    showSection("home");
+        successModal.hide();
 
-}, 3500);
+        showSection("home");
+
+    }, 3500);
+
+},1000);
 
 
 }
@@ -616,4 +664,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "change",
         ordenarViajes
     );
+
+    document.getElementById("fechaRegistro").textContent =
+    usuario.fechaRegistro || "-";
+
+    actualizarSelectEstaciones();
 });
