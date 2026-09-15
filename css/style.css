@@ -256,3 +256,33 @@ footer .text-center.p-3{
     font-size:.80rem;
 
 }
+
+
+
+/* =========================
+   VIAJE EN CURSO
+========================= */
+
+#viajeActivoCard {
+    border-left: 5px solid var(--pl-pine);
+}
+
+.reloj-viaje {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--pl-pine);
+    letter-spacing: 2px;
+    margin: 8px 0;
+}
+
+.reloj-viaje.warning {
+    color: var(--pl-amber-dark);
+}
+
+.reloj-viaje.danger {
+    color: #dc3545;
+}
+
+#alertaTiempoViaje {
+    transition: all 0.3s ease;
+}

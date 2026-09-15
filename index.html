@@ -95,13 +95,91 @@
 
 </div>
               <button
+
+                  id="btnAbrirAlquiler"
                   class="btn btn-success btn-lg mt-3"
                   data-bs-toggle="modal"
                   data-bs-target="#rentBikeModal">
-
                   Alquilar Bicicleta
 
               </button>
+            
+
+<!-- VIAJE EN CURSO -->
+<div id="viajeActivoCard" class="card shadow mt-4 d-none">
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">🚲 Viaje en curso</h4>
+            <span id="estadoViaje" class="badge bg-success">
+                En curso
+            </span>
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <p class="mb-2">
+                    <strong>Bicicleta:</strong>
+                    <span id="bicicletaActiva">-</span>
+                </p>
+
+                <p class="mb-2">
+                    <strong>Origen:</strong>
+                    <span id="origenViaje">-</span>
+                </p>
+
+                <p class="mb-2">
+                    <strong>Destino previsto:</strong>
+                    <span id="destinoViaje">-</span>
+                </p>
+            </div>
+
+            <div class="col-md-6 text-center">
+
+                <div class="text-muted">
+                    Tiempo transcurrido
+                </div>
+
+                <div id="relojViaje" class="reloj-viaje">
+                    00:00:00
+                </div>
+
+                <small class="text-muted">
+                    Máximo por viaje: 01:00:00
+                    <br>
+                    Tiempo disponible hoy:
+                    <strong id="tiempoDisponibleViaje">04:00:00</strong>
+                </small>
+
+            </div>
+
+        </div>
+
+        <div id="alertaTiempoViaje"
+             class="alert alert-success mt-3 mb-3">
+            🟢 Tenés hasta 1 hora para completar este viaje.
+        </div>
+
+        <div class="mb-3">
+            <label for="estacionDevolucion" class="form-label">
+                <strong>Estación de devolución</strong>
+            </label>
+
+            <select id="estacionDevolucion" class="form-select">
+                <option value="">Seleccioná dónde devolver la bicicleta</option>
+            </select>
+        </div>
+
+        <button id="btnFinalizarViaje"
+                class="btn btn-success w-100"
+                onclick="finalizarViaje()">
+            🚲 Finalizar viaje
+        </button>
+
+    </div>
+</div>
+
 
             </div>
 
@@ -169,9 +247,11 @@
 
                             <th>#</th>
                             <th>Fecha</th>
+                            <th>Bicicleta</th>
                             <th>Origen</th>
                             <th>Destino</th>
                             <th>KM</th>
+                            <th>Duración</th>
 
                         </tr>
 
@@ -259,7 +339,7 @@
 
                     <p>
                         <strong>Tiempo disponible hoy:</strong>
-                        2 horas
+                        <span id="tiempoDisponibleHoy">4 horas</span>
                     </p>
             </div>
 

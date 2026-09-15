@@ -27,6 +27,25 @@ const trips =
     
     });
 
+
+// =========================
+// CONFIGURACIÓN DE ALQUILER
+// =========================
+
+const MAX_TIEMPO_VIAJE = 60 * 60 * 1000; // 1 hora
+const MAX_TIEMPO_DIARIO = 4 * 60 * 60 * 1000; // 4 horas
+
+const claveViajeActivo = `viajeActivo_${usuario.email}`;
+
+let viajeActivo = JSON.parse(
+    localStorage.getItem(claveViajeActivo)
+);
+
+let relojIntervalo = null;
+
+
+
+
 let estaciones = 
         JSON.parse(localStorage.getItem("estaciones"));
 if (!estaciones) {
@@ -236,6 +255,28 @@ function actualizarDistancia() {
 
     const km = obtenerDistancia(origen, destino);
 
+    const tiempoDisponibleHoy =
+    obtenerTiempoRestanteHoy();
+
+    viajeActivo = {
+
+        bicicletaId,
+    
+        origen,
+    
+        destinoPrevisto: destino,
+    
+        kmEstimados: km,
+    
+        inicio: Date.now(),
+    
+        tiempoMaximo:
+            Math.min(
+                MAX_TIEMPO_VIAJE,
+                tiempoDisponibleHoy
+            )
+    };
+
     info.textContent =
         km !== null
             ? `Distancia estimada : ${km} km`
@@ -259,6 +300,9 @@ function guardarEstaciones() {
     );
 
 }
+
+
+
 //======================================================
 // ALQUILER DE BICICLETAS
 //======================================================
@@ -271,118 +315,131 @@ function rentBike() {
     const destino =
         document.getElementById("destino").value;
 
-    if (origen === destino) {
+    if (!origen || !destino) {
         mostrarModal(
-            "Ruta inválida",
-            "Elegí dos estaciones distintas.",
+            "Datos incompletos",
+            "Seleccioná una estación de origen y una estación de destino.",
             "warning"
         );
-    
         return;
     }
 
-        if (estaciones[origen].bicis === 0) {
+    if (origen === destino) {
+        mostrarModal(
+            "Estaciones iguales",
+            "La estación de origen y destino deben ser diferentes.",
+            "warning"
+        );
+        return;
+    }
 
-            mostrarModal(
-                "Sin disponibilidad",
-                "No hay bicicletas disponibles en esta estación.",
-                "warning"
-            );
+    // No permitir otro alquiler mientras haya uno activo
+    if (viajeActivo) {
+        mostrarModal(
+            "Viaje en curso",
+            "Primero debés devolver la bicicleta en una estación.",
+            "warning"
+        );
+        return;
+    }
 
-            return;
-        }
+    const tiempoUsadoHoy =
+        obtenerTiempoUsadoHoy();
 
-        const boton = document.getElementById("btnAlquilar");
+    // Verificar límite diario
+    if (tiempoUsadoHoy >= MAX_TIEMPO_DIARIO) {
 
-        boton.disabled = true;
+        mostrarModal(
+            "Límite diario alcanzado",
+            "Ya utilizaste las 4 horas disponibles para hoy. Podrás volver a alquilar mañana.",
+            "warning"
+        );
 
-        boton.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Alquilando bicicleta...
-        `;
+        return;
+    }
 
-        setTimeout(()=>{
+    // Verificar bicicletas disponibles
+    if (!estaciones[origen] || estaciones[origen].bicis <= 0) {
 
-            const km = obtenerDistancia(origen, destino);
+        mostrarModal(
+            "Sin disponibilidad",
+            "No hay bicicletas disponibles en la estación seleccionada.",
+            "warning"
+        );
 
-            if (km === null) {
+        return;
+    }
 
-            mostrarModal(
-                "Ruta no disponible",
-                "No hay distancia registrada para esa ruta.",
-                "danger"
-            );
-        
-            boton.disabled = false;
+    const btn =
+        document.getElementById("btnAlquilar");
 
-            boton.innerHTML = "Confirmar Alquiler";
-            return;
+    btn.disabled = true;
 
-        }
-
-        
-
-        const viaje = {
-
-            id: trips.length + 1,
-        
-            fecha:
-                new Date().toLocaleString("es-AR"),
-        
-            timestamp:
-                Date.now(),
-        
-            origen,
-            destino,
-            km
-        
-        };
-
-    trips.push(viaje);
-
-    guardarViajes();
-    
-    document.getElementById("cantidadViajes").textContent =
-        trips.length;
-
-    estaciones[origen].bicis--;
-    estaciones[destino].bicis++;
-
-    guardarEstaciones();
-    actualizarSelectEstaciones();
-
-    ordenarViajes();
-    actualizarEstadisticas();
-    renderEstaciones();
-
-const rentModal =
-    bootstrap.Modal.getInstance(
-        document.getElementById("rentBikeModal")
-    );
-
-if (rentModal) {
-    rentModal.hide();
-}
-
-// Mostrar el modal de éxito
-const successModal =
-    new bootstrap.Modal(
-        document.getElementById("successModal")
-    );
-
-    successModal.show();
+    btn.innerHTML = `
+        <span class="spinner-border spinner-border-sm"></span>
+        Iniciando alquiler...
+    `;
 
     setTimeout(() => {
 
-        successModal.hide();
+        const km =
+            obtenerDistancia(origen, destino);
 
-        showSection("home");
+        // Generamos una identificación simple para la bicicleta
+        const bicicletaId =
+            `PB-${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
 
-    }, 3500);
+        // Crear viaje activo
+        viajeActivo = {
 
-},1000);
+            bicicletaId,
 
+            origen,
 
+            destinoPrevisto: destino,
+
+            kmEstimados: km,
+
+            inicio: Date.now()
+
+        };
+
+        // Guardar viaje activo
+        localStorage.setItem(
+            claveViajeActivo,
+            JSON.stringify(viajeActivo)
+        );
+
+        // La bicicleta SALE de la estación
+        estaciones[origen].bicis--;
+
+        guardarEstaciones();
+
+        actualizarSelectEstaciones();
+
+        renderEstaciones();
+
+        // Cerrar modal
+        const modalElement =
+            document.getElementById("rentBikeModal");
+
+        const modal =
+            bootstrap.Modal.getInstance(modalElement);
+
+        if (modal) {
+            modal.hide();
+        }
+
+        // Mostrar viaje activo
+        mostrarViajeActivo();
+
+        // Restaurar botón
+        btn.disabled = false;
+
+        btn.innerHTML =
+            "🚲 Alquilar Bicicleta";
+
+    }, 1000);
 }
 
 //======================================================
@@ -399,7 +456,7 @@ const successModal =
         let viajeMasLargo = 0;
 
         const estacionesUtilizadas = new Set();
-    
+
         trips.forEach(viaje => {
     
             km += viaje.km;
@@ -505,9 +562,11 @@ function renderTrips() {
             <tr>
                 <td>${viaje.id}</td>
                 <td>${viaje.fecha}</td>
+                <td>${viaje.bicicletaId || "-"}</td>
                 <td>${viaje.origen}</td>
                 <td>${viaje.destino}</td>
                 <td>${viaje.km} km</td>
+                <td>${viaje.duracion || "-"}</td>
             </tr>
         `;
     });
@@ -613,6 +672,421 @@ function eliminarHistorial() {
 
 }
 
+
+function obtenerInicioDelDia() {
+    const ahora = new Date();
+
+    return new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate()
+    ).getTime();
+}
+
+
+function obtenerTiempoUsadoHoy() {
+
+    const inicioDia = obtenerInicioDelDia();
+
+    let tiempoTotal = 0;
+
+    trips.forEach(viaje => {
+
+        if (
+            viaje.timestamp &&
+            viaje.timestamp >= inicioDia &&
+            viaje.duracionSegundos
+        ) {
+            tiempoTotal += viaje.duracionSegundos * 1000;
+        }
+
+    });
+
+    // Si hay un viaje activo, también contamos su tiempo actual
+    if (viajeActivo) {
+
+        const tiempoActual =
+            Date.now() - viajeActivo.inicio;
+
+        tiempoTotal += Math.min(
+            tiempoActual,
+            MAX_TIEMPO_VIAJE
+        );
+    }
+
+    return tiempoTotal;
+}
+
+function obtenerTiempoRestanteHoy() {
+
+    const tiempoUsado =
+        obtenerTiempoUsadoHoy();
+
+    return Math.max(
+        MAX_TIEMPO_DIARIO - tiempoUsado,
+        0
+    );
+}
+
+
+function formatearTiempo(milisegundos) {
+
+    const totalSegundos =
+        Math.floor(milisegundos / 1000);
+
+    const horas =
+        Math.floor(totalSegundos / 3600);
+
+    const minutos =
+        Math.floor((totalSegundos % 3600) / 60);
+
+    const segundos =
+        totalSegundos % 60;
+
+    return `${String(horas).padStart(2, "0")}:${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+}
+
+
+
+
+function actualizarTiempoDisponibleHoy() {
+
+    const elemento =
+        document.getElementById("tiempoDisponibleHoy");
+
+    if (!elemento) return;
+
+    const utilizado =
+        obtenerTiempoUsadoHoy();
+
+    const restante =
+        Math.max(
+            MAX_TIEMPO_DIARIO - utilizado,
+            0
+        );
+
+    elemento.textContent =
+        formatearTiempo(restante);
+}
+
+
+
+function mostrarViajeActivo() {
+
+    const tiempoDisponible =
+    viajeActivo.tiempoMaximo ||
+    MAX_TIEMPO_VIAJE;
+
+    document.getElementById(
+        "tiempoDisponibleViaje"
+        ).textContent =
+    formatearTiempo(tiempoDisponible);
+
+    const card =
+        document.getElementById("viajeActivoCard");
+
+    if (!card || !viajeActivo) return;
+
+    card.classList.remove("d-none");
+
+    document.getElementById("bicicletaActiva")
+        .textContent =
+        viajeActivo.bicicletaId;
+
+    document.getElementById("origenViaje")
+        .textContent =
+        viajeActivo.origen;
+
+    document.getElementById("destinoViaje")
+        .textContent =
+        viajeActivo.destinoPrevisto;
+
+    // Cargar estaciones de devolución
+    actualizarEstacionesDevolucion();
+
+    // Iniciar reloj
+    iniciarRelojViaje();
+
+    // Deshabilitar alquiler
+    const botonesAlquiler =
+        document.querySelectorAll(
+            '[data-bs-target="#rentBikeModal"]'
+        );
+
+    botonesAlquiler.forEach(boton => {
+        boton.disabled = true;
+    });
+}
+
+//Estaciones de devolucion
+
+
+function actualizarEstacionesDevolucion() {
+
+    const select =
+        document.getElementById("estacionDevolucion");
+
+    if (!select) return;
+
+    select.innerHTML = `
+        <option value="">
+            Seleccioná dónde devolver la bicicleta
+        </option>
+    `;
+
+    Object.keys(estaciones).forEach(estacion => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = estacion;
+        option.textContent = estacion;
+
+        select.appendChild(option);
+
+    });
+
+    // Dejamos seleccionada por defecto
+    // la estación de destino prevista
+    if (viajeActivo) {
+
+        select.value =
+            viajeActivo.destinoPrevisto;
+    }
+}
+
+
+//Reloj
+
+function iniciarRelojViaje() {
+
+    if (relojIntervalo) {
+        clearInterval(relojIntervalo);
+    }
+
+    actualizarRelojViaje();
+
+    relojIntervalo =
+        setInterval(
+            actualizarRelojViaje,
+            1000
+        );
+}
+
+
+
+function actualizarRelojViaje() {
+
+    if (!viajeActivo) return;
+
+    const reloj =
+        document.getElementById("relojViaje");
+
+    const alerta =
+        document.getElementById("alertaTiempoViaje");
+
+    if (!reloj || !alerta) return;
+
+    const transcurrido =
+        Date.now() - viajeActivo.inicio;
+
+
+
+    const tiempoMaximo =
+    viajeActivo.tiempoMaximo ||
+    MAX_TIEMPO_VIAJE;
+    
+    const tiempoMostrar =
+        Math.min(
+            transcurrido,
+            tiempoMaximo
+        );
+    reloj.textContent =
+        formatearTiempo(tiempoMostrar);
+
+    // Reiniciar clases
+    reloj.classList.remove(
+        "warning",
+        "danger"
+    );
+
+    // Menos de 45 minutos
+    if (transcurrido < 45 * 60 * 1000) {
+
+        alerta.className =
+            "alert alert-success mt-3 mb-3";
+
+        alerta.textContent =
+            "🟢 Tenés tiempo disponible para completar el viaje.";
+    }
+
+    // Entre 45 y 55 minutos
+    else if (transcurrido < 55 * 60 * 1000) {
+
+        reloj.classList.add("warning");
+
+        alerta.className =
+            "alert alert-warning mt-3 mb-3";
+
+        alerta.textContent =
+            "🟡 Recordá que el límite de este viaje es de 1 hora.";
+    }
+
+    // Entre 55 y 60 minutos
+    else if (transcurrido < tiempoMaximo) {
+
+        reloj.classList.add("danger");
+
+        alerta.className =
+            "alert alert-danger mt-3 mb-3";
+
+        alerta.textContent =
+            "⛔ Llegaste al límite de tiempo disponible. Devolvé la bicicleta en una estación.";
+    }
+
+    // Llegó al límite del viaje
+    else {
+
+        reloj.classList.add("danger");
+
+        alerta.className =
+            "alert alert-danger mt-3 mb-3";
+
+        alerta.textContent =
+            "⛔ Llegaste al límite de 1 hora. Devolvé la bicicleta en una estación.";
+
+    }
+
+    actualizarTiempoDisponibleHoy();
+}
+
+
+
+function finalizarViaje() {
+
+    if (!viajeActivo) {
+        return;
+    }
+
+    const select =
+        document.getElementById("estacionDevolucion");
+
+    const estacionDevolucion =
+        select.value;
+
+    if (!estacionDevolucion) {
+
+        mostrarModal(
+            "Seleccioná una estación",
+            "Debés indicar en qué estación dejaste la bicicleta.",
+            "warning"
+        );
+
+        return;
+    }
+
+    const fin =
+        Date.now();
+
+    const duracionMilisegundos =
+        fin - viajeActivo.inicio;
+
+    const duracionSegundos =
+        Math.floor(
+            duracionMilisegundos / 1000
+        );
+
+    const km =
+        obtenerDistancia(
+            viajeActivo.origen,
+            estacionDevolucion
+        );
+
+    // Crear viaje finalizado
+    const viaje = {
+
+        id: trips.length + 1,
+
+        fecha:
+            new Date().toLocaleString("es-AR"),
+
+        timestamp: fin,
+
+        origen:
+            viajeActivo.origen,
+
+        destino:
+            estacionDevolucion,
+
+        km,
+
+        bicicletaId:
+            viajeActivo.bicicletaId,
+
+        duracionSegundos,
+
+        duracion:
+            formatearTiempo(
+                duracionMilisegundos
+            )
+    };
+
+    // Guardar viaje en historial
+    trips.push(viaje);
+
+    guardarViajes();
+
+    // La bicicleta vuelve a la estación
+    estaciones[estacionDevolucion].bicis++;
+
+    guardarEstaciones();
+
+    // Eliminar viaje activo
+    localStorage.removeItem(
+        claveViajeActivo
+    );
+
+    viajeActivo = null;
+
+    // Detener reloj
+    if (relojIntervalo) {
+
+        clearInterval(relojIntervalo);
+
+        relojIntervalo = null;
+    }
+
+    // Actualizar interfaz
+    document
+        .getElementById("viajeActivoCard")
+        .classList.add("d-none");
+
+    const botonesAlquiler =
+        document.querySelectorAll(
+            '[data-bs-target="#rentBikeModal"]'
+        );
+
+    botonesAlquiler.forEach(boton => {
+        boton.disabled = false;
+    });
+
+    actualizarSelectEstaciones();
+
+    renderEstaciones();
+
+    renderTrips();
+
+    actualizarEstadisticas();
+
+    actualizarTiempoDisponibleHoy();
+
+    // Mostrar confirmación
+    mostrarModal(
+        "Viaje finalizado",
+        `🚲 Bicicleta ${viaje.bicicletaId} devuelta correctamente en ${estacionDevolucion}. Duración: ${viaje.duracion}.`,
+        "success"
+    );
+}
 //======================================================
 // INICIALIZACIÓN
 //======================================================
@@ -669,4 +1143,11 @@ document.addEventListener("DOMContentLoaded", () => {
     usuario.fechaRegistro || "-";
 
     actualizarSelectEstaciones();
+
+
+    if (viajeActivo) {
+        mostrarViajeActivo();
+    }
+    
+    actualizarTiempoDisponibleHoy();
 });
