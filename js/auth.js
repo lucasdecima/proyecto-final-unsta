@@ -1,3 +1,19 @@
+// CONFIGURACIÓN DE SUPABASE
+
+const SUPABASE_URL = "https://ovbiongsunezeclvgjgpj.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_MgubmqHLwlwnxShupDsA0A_6YZt9T8K";
+
+let supabaseClient = null;
+
+if (window.supabase && window.supabase.createClient) {
+    supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+}
+
+// Modales
+
 
 function mostrarModal(titulo, mensaje, tipo = "success") {
 
