@@ -2,30 +2,8 @@
 // VARIABLES GLOBALES
 //======================================================
 
-const usuario =
-    JSON.parse(
-        localStorage.getItem("usuarioLogueado")
-    );
-
-if (!usuario) {
-
-    window.location.href = "login.html";
-
-}
-const trips =
-    JSON.parse(
-        localStorage.getItem(`trips_${usuario.email}`)
-    ) || [];
-
-    trips.forEach(viaje => {
-
-        if (!viaje.timestamp) {
-    
-            viaje.timestamp = Date.now();
-    
-        }
-    
-    });
+let usuario = null;
+let trips = [];
 
 // =========================
 // CONFIGURACIÓN DE ALQUILER
@@ -34,11 +12,8 @@ const trips =
 const MAX_TIEMPO_VIAJE = 60 * 60 * 1000; // 1 hora
 const MAX_TIEMPO_DIARIO = 4 * 60 * 60 * 1000; // 4 horas
 
-const claveViajeActivo = `viajeActivo_${usuario.email}`;
-
-let viajeActivo = JSON.parse(
-    localStorage.getItem(claveViajeActivo)
-);
+let claveViajeActivo = null;
+let viajeActivo = null;
 
 let relojIntervalo = null;
 
@@ -628,22 +603,60 @@ function eliminarHistorial() {
 
 }
 
-//======================================================
-// INICIALIZACIÓN
-//======================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+ //======================================================
+ // INICIALIZACIÓN
+ //======================================================
 
-    // Mostrar el usuario logueado, Email y cantidad de viajes en el perfil
+document.addEventListener("DOMContentLoaded", async () => {
+
+    // Verificar la sesión real de Supabase.
+    const sesionValida = await verificarSesion();
+
+    if (!sesionValida) {
+        return;
+    }
+
+    usuario = JSON.parse(
+        localStorage.getItem("usuarioLogueado")
+    );
+
+    if (!usuario) {
+        window.location.replace("login.html");
+        return;
+    }
+
+    claveViajeActivo = `viajeActivo_${usuario.email}`;
+
+    viajeActivo = JSON.parse(
+    localStorage.getItem(claveViajeActivo)
+    );
+
+    // Carga temporal: los viajes todavía están en localStorage.
+    trips = JSON.parse(
+        localStorage.getItem(`trips_${usuario.email}`)
+    ) || [];
+
+    trips.forEach(viaje => {
+        if (!viaje.timestamp) {
+            viaje.timestamp = Date.now();
+        }
+    });
+
+    // Mostrar los datos del perfil.
     document.getElementById("nombreUsuario").textContent =
-    usuario.nombre;
+        usuario.nombre;
 
     document.getElementById("emailUsuario").textContent =
-    usuario.email;
+        usuario.email;
 
     document.getElementById("cantidadViajes").textContent =
-    trips.length;
+        trips.length;
 
+    document.getElementById("fechaRegistro").textContent =
+        usuario.fechaRegistro || "-";
+
+    // Eventos de alquiler.
     document
         .getElementById("origen")
         .addEventListener("change", actualizarDistancia);
@@ -656,32 +669,22 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById("rentBikeModal")
         .addEventListener("shown.bs.modal", actualizarDistancia);
 
-        if (!localStorage.getItem("estaciones")) {
+    if (!localStorage.getItem("estaciones")) {
+        generarBicisAleatorias();
+    }
 
-            generarBicisAleatorias();
-        
-        };
-
+    // Búsqueda y ordenamiento del historial.
     document
         .getElementById("buscarViaje")
-        .addEventListener(
-            "keyup",
-            filtrarViajes
-        );
+        .addEventListener("keyup", filtrarViajes);
 
+    document
+        .getElementById("ordenViajes")
+        .addEventListener("change", ordenarViajes);
+
+    // Renderizado de la aplicación.
     renderTrips();
     actualizarEstadisticas();
     renderEstaciones();
-
-    document
-    .getElementById("ordenViajes")
-    .addEventListener(
-        "change",
-        ordenarViajes
-    );
-
-    document.getElementById("fechaRegistro").textContent =
-    usuario.fechaRegistro || "-";
-
     actualizarSelectEstaciones();
 });
