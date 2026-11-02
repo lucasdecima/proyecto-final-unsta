@@ -289,126 +289,327 @@ function guardarEstaciones() {
 // ALQUILER DE BICICLETAS
 //======================================================
 
-function rentBike() {
 
-    const origen =
-        document.getElementById("origen").value;
-
-    const destino =
-        document.getElementById("destino").value;
+async function rentBike() {
+    const origen = document.getElementById("origen").value;
+    const destino = document.getElementById("destino").value;
+    const boton = document.getElementById("btnAlquilar");
 
     if (origen === destino) {
-        mostrarModal(
-            "Ruta inválida",
-            "Elegí dos estaciones distintas.",
-            "warning"
-        );
-    
+        mostrarModal("Ruta inválida", "Elegí dos estaciones distintas.", "warning");
         return;
     }
 
-        if (estaciones[origen].bicis === 0) {
+    if (!estaciones[origen] || estaciones[origen].bicis === 0) {
+        mostrarModal(
+            "Sin disponibilidad",
+            "No hay bicicletas disponibles en esta estación.",
+            "warning"
+        );
+        return;
+    }
 
-            mostrarModal(
-                "Sin disponibilidad",
-                "No hay bicicletas disponibles en esta estación.",
-                "warning"
-            );
+    const km = obtenerDistancia(origen, destino);
 
-            return;
-        }
+    if (km === null) {
+        mostrarModal(
+            "Ruta no disponible",
+            "No hay distancia registrada para esa ruta.",
+            "danger"
+        );
+        return;
+    }
 
-        const boton = document.getElementById("btnAlquilar");
-
-        boton.disabled = true;
-
-        boton.innerHTML = `
+    boton.disabled = true;
+    boton.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
         Alquilando bicicleta...
-        `;
+    `;
 
-        setTimeout(()=>{
+    try {
+        const { data, error } = await supabaseClient.rpc(
+            "iniciar_alquiler",
+            {
+                p_estacion_origen_id: estaciones[origen].id,
+                p_estacion_destino_id: estaciones[destino].id
+            }
+        );
 
-            const km = obtenerDistancia(origen, destino);
+        if (error) throw error;
 
-            if (km === null) {
-
-            mostrarModal(
-                "Ruta no disponible",
-                "No hay distancia registrada para esa ruta.",
-                "danger"
-            );
-        
-            boton.disabled = false;
-
-            boton.innerHTML = "Confirmar Alquiler";
-            return;
-
+        if (!data || data.length === 0) {
+            throw new Error("Supabase no devolvió los datos del alquiler.");
         }
 
-        
+        const alquiler = data[0];
 
-        const viaje = {
-
-            id: trips.length + 1,
-        
-            fecha:
-                new Date().toLocaleString("es-AR"),
-        
-            timestamp:
-                Date.now(),
-        
-            origen,
-            destino,
-            km
-        
+        // Guardamos temporalmente los datos del viaje activo en memoria.
+        viajeActivo = {
+            id: alquiler.viaje_id,
+            bicicletaId: alquiler.bicicleta_id,
+            bicicletaCodigo: alquiler.bicicleta_codigo,
+            inicio: alquiler.inicio,
+            origen: origen,
+            destino: destino,
+            estado: alquiler.estado
         };
 
-    trips.push(viaje);
+        await cargarEstacionesDesdeSupabase();
+        actualizarSelectEstaciones();
+        renderEstaciones();
 
-    guardarViajes();
-    
-    document.getElementById("cantidadViajes").textContent =
-        trips.length;
+        const rentModal = bootstrap.Modal.getInstance(
+            document.getElementById("rentBikeModal")
+        );
 
-    estaciones[origen].bicis--;
-    estaciones[destino].bicis++;
+        if (rentModal) rentModal.hide();
 
-    guardarEstaciones();
-    actualizarSelectEstaciones();
+        mostrarViajeActivo();
 
-    ordenarViajes();
-    actualizarEstadisticas();
-    renderEstaciones();
+        const successModal = new bootstrap.Modal(
+            document.getElementById("successModal")
+        );
 
-const rentModal =
-    bootstrap.Modal.getInstance(
-        document.getElementById("rentBikeModal")
-    );
+        successModal.show();
 
-if (rentModal) {
-    rentModal.hide();
+        setTimeout(() => {
+            successModal.hide();
+        }, 2500);
+
+    } catch (error) {
+        console.error("Error al iniciar el alquiler:", error);
+
+        mostrarModal(
+            "No se pudo realizar el alquiler",
+            error.message || "Ocurrió un error al registrar el alquiler.",
+            "danger"
+        );
+
+    } finally {
+        boton.disabled = false;
+        boton.innerHTML = "Confirmar Alquiler";
+    }
 }
 
-// Mostrar el modal de éxito
-const successModal =
-    new bootstrap.Modal(
-        document.getElementById("successModal")
-    );
 
-    successModal.show();
+async function cargarViajeActivoDesdeSupabase() {
+    const { data, error } = await supabaseClient
+        .from("viajes")
+        .select("*")
+        .eq("usuario_id", usuario.id)
+        .eq("estado", "en_curso")
+        .maybeSingle();
 
-    setTimeout(() => {
+    if (error) throw error;
 
-        successModal.hide();
+    if (!data) {
+        viajeActivo = null;
+        return null;
+    }
 
-        showSection("home");
+    const { data: bicicleta, error: errorBicicleta } =
+        await supabaseClient
+            .from("bicicletas")
+            .select("codigo")
+            .eq("id", data.bicicleta_id)
+            .single();
 
-    }, 3500);
+    if (errorBicicleta) throw errorBicicleta;
 
-},1000);
+    const { data: origen, error: errorOrigen } =
+        await supabaseClient
+            .from("estaciones")
+            .select("nombre")
+            .eq("id", data.estacion_origen_id)
+            .single();
+
+    if (errorOrigen) throw errorOrigen;
+
+    const { data: destino, error: errorDestino } =
+        await supabaseClient
+            .from("estaciones")
+            .select("nombre")
+            .eq("id", data.estacion_destino_id)
+            .single();
+
+    if (errorDestino) throw errorDestino;
+
+    viajeActivo = {
+        id: data.id,
+        bicicletaId: data.bicicleta_id,
+        bicicletaCodigo: bicicleta.codigo,
+        inicio: data.inicio,
+        origen: origen.nombre,
+        destino: destino.nombre,
+        estado: data.estado
+    };
+
+    return viajeActivo;
+}
 
 
+function mostrarViajeActivo() {
+    const tarjeta = document.getElementById("viajeActivoCard");
+    const selector = document.getElementById("estacionDevolucion");
+
+    if (!viajeActivo) {
+        tarjeta.classList.add("d-none");
+        detenerRelojViaje();
+        return;
+    }
+
+    tarjeta.classList.remove("d-none");
+
+    document.getElementById("bicicletaActiva").textContent =
+        viajeActivo.bicicletaCodigo;
+
+    document.getElementById("origenViaje").textContent =
+        viajeActivo.origen;
+
+    document.getElementById("destinoViaje").textContent =
+        viajeActivo.destino;
+
+    // Cargamos las estaciones disponibles como lugares de devolución.
+    selector.innerHTML = `
+        <option value="">Seleccioná dónde devolver la bicicleta</option>
+    `;
+
+    Object.entries(estaciones).forEach(([nombre, estacion]) => {
+        selector.innerHTML += `
+            <option value="${estacion.id}">${nombre}</option>
+        `;
+    });
+
+    selector.value = "";
+
+    iniciarRelojViaje();
+}
+
+
+function iniciarRelojViaje() {
+    detenerRelojViaje();
+
+    actualizarRelojViaje();
+
+    relojIntervalo = setInterval(() => {
+        actualizarRelojViaje();
+    }, 1000);
+}
+
+
+function detenerRelojViaje() {
+    if (relojIntervalo) {
+        clearInterval(relojIntervalo);
+        relojIntervalo = null;
+    }
+}
+
+
+function actualizarRelojViaje() {
+    if (!viajeActivo) return;
+
+    const inicio = new Date(viajeActivo.inicio).getTime();
+    const transcurrido = Date.now() - inicio;
+
+    const horas = Math.floor(transcurrido / 3600000);
+    const minutos = Math.floor((transcurrido % 3600000) / 60000);
+    const segundos = Math.floor((transcurrido % 60000) / 1000);
+
+    document.getElementById("relojViaje").textContent =
+        [horas, minutos, segundos]
+            .map(valor => String(valor).padStart(2, "0"))
+            .join(":");
+
+    const alerta = document.getElementById("alertaTiempoViaje");
+
+    if (transcurrido >= MAX_TIEMPO_VIAJE) {
+        alerta.className = "alert alert-danger mt-3 mb-3";
+        alerta.textContent = "🔴 Se superó el límite de 1 hora de viaje.";
+    } else if (transcurrido >= MAX_TIEMPO_VIAJE * 0.8) {
+        alerta.className = "alert alert-warning mt-3 mb-3";
+        alerta.textContent = "🟡 Tu viaje está cerca del límite de 1 hora.";
+    } else {
+        alerta.className = "alert alert-success mt-3 mb-3";
+        alerta.textContent = "🟢 Tenés hasta 1 hora para completar este viaje.";
+    }
+}
+
+
+async function finalizarViaje() {
+    if (!viajeActivo) {
+        mostrarModal(
+            "No hay un viaje activo",
+            "No encontramos un viaje pendiente de devolución.",
+            "warning"
+        );
+        return;
+    }
+
+    const selector = document.getElementById("estacionDevolucion");
+    const estacionId = Number(selector.value);
+
+    if (!estacionId) {
+        mostrarModal(
+            "Seleccioná una estación",
+            "Debés indicar dónde devolvés la bicicleta.",
+            "warning"
+        );
+        return;
+    }
+
+    const boton = document.getElementById("btnFinalizarViaje");
+
+    boton.disabled = true;
+    boton.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Finalizando viaje...
+    `;
+
+    try {
+        const { data, error } = await supabaseClient.rpc(
+            "finalizar_alquiler",
+            {
+                p_viaje_id: viajeActivo.id,
+                p_estacion_devolucion_id: estacionId
+            }
+        );
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            throw new Error("Supabase no devolvió los datos de la devolución.");
+        }
+
+        const resultado = data[0];
+
+        viajeActivo = null;
+        detenerRelojViaje();
+
+        await cargarEstacionesDesdeSupabase();
+        actualizarSelectEstaciones();
+        renderEstaciones();
+
+        document.getElementById("viajeActivoCard").classList.add("d-none");
+
+        mostrarModal(
+            "¡Devolución exitosa!",
+            `La bicicleta fue devuelta correctamente. Distancia recorrida: ${resultado.km} km.`,
+            "success"
+        );
+
+    } catch (error) {
+        console.error("Error al finalizar el viaje:", error);
+
+        mostrarModal(
+            "No se pudo finalizar el viaje",
+            error.message || "Ocurrió un error al registrar la devolución.",
+            "danger"
+        );
+
+    } finally {
+        boton.disabled = false;
+        boton.innerHTML = "🚲 Finalizar viaje";
+    }
 }
 
 //======================================================
@@ -662,11 +863,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    claveViajeActivo = `viajeActivo_${usuario.email}`;
-
-    viajeActivo = JSON.parse(
-    localStorage.getItem(claveViajeActivo)
-    );
+    claveViajeActivo = null;
+    viajeActivo = null;
 
     // Carga temporal: los viajes todavía están en localStorage.
     trips = JSON.parse(
@@ -708,15 +906,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     try {
         await cargarEstacionesDesdeSupabase();
+        await cargarViajeActivoDesdeSupabase();
+
     } catch (error) {
         console.error("Error al cargar estaciones desde Supabase:", error);
-    
+
         mostrarModal(
             "Error al cargar estaciones",
             "No pudimos obtener las estaciones y bicicletas. Revisá la conexión con Supabase y sus políticas de acceso.",
             "danger"
         );
-    
+
         return;
     }
 
@@ -734,4 +934,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     actualizarEstadisticas();
     renderEstaciones();
     actualizarSelectEstaciones();
+    mostrarViajeActivo();
 });
