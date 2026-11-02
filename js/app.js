@@ -16,6 +16,7 @@ let claveViajeActivo = null;
 let viajeActivo = null;
 
 let relojIntervalo = null;
+let intervaloTiempoDisponible = null;
 
 let estaciones = 
         JSON.parse(localStorage.getItem("estaciones"));
@@ -291,6 +292,24 @@ function guardarEstaciones() {
 
 
 async function rentBike() {
+
+        // Verificar el tiempo disponible del usuario para hoy.
+    try {
+        const tiempoDisponible = await actualizarTiempoDisponibleHoy();
+
+        if (tiempoDisponible <= 0) {
+            alert("Alcanzaste el límite máximo de 4 horas de alquiler por día. Podrás volver a alquilar mañana.");
+            return;
+        }
+
+    } catch (error) {
+        console.error("Error al verificar el tiempo disponible:", error);
+        alert("No se pudo verificar el tiempo disponible. Intentá nuevamente.");
+        return;
+    }
+
+
+
     const origen = document.getElementById("origen").value;
     const destino = document.getElementById("destino").value;
     const boton = document.getElementById("btnAlquilar");
@@ -448,6 +467,100 @@ async function cargarViajeActivoDesdeSupabase() {
 }
 
 
+
+async function cargarHistorialDesdeSupabase() {
+    const { data: viajes, error } = await supabaseClient
+        .from("viajes")
+        .select(`
+            id,
+            bicicleta_id,
+            estacion_origen_id,
+            estacion_destino_id,
+            inicio,
+            fin,
+            duracion_segundos,
+            km,
+            estado
+        `)
+        .eq("usuario_id", usuario.id)
+        .eq("estado", "finalizado")
+        .order("inicio", { ascending: false });
+
+    if (error) throw error;
+
+    if (!viajes || viajes.length === 0) {
+        trips = [];
+        return;
+    }
+
+    // Obtener los IDs de estaciones y bicicletas utilizados.
+    const estacionesIds = [
+        ...new Set(
+            viajes.flatMap(viaje => [
+                viaje.estacion_origen_id,
+                viaje.estacion_destino_id
+            ]).filter(id => id !== null)
+        )
+    ];
+
+    const bicicletasIds = [
+        ...new Set(viajes.map(viaje => viaje.bicicleta_id))
+    ];
+
+    // Consultar los nombres de las estaciones.
+    const { data: estacionesDB, error: errorEstaciones } =
+        await supabaseClient
+            .from("estaciones")
+            .select("id, nombre")
+            .in("id", estacionesIds);
+
+    if (errorEstaciones) throw errorEstaciones;
+
+    // Consultar los códigos de las bicicletas.
+    const { data: bicicletasDB, error: errorBicicletas } =
+        await supabaseClient
+            .from("bicicletas")
+            .select("id, codigo")
+            .in("id", bicicletasIds);
+
+    if (errorBicicletas) throw errorBicicletas;
+
+    // Crear mapas para relacionar los IDs con sus nombres.
+    const nombresEstaciones = Object.fromEntries(
+        estacionesDB.map(estacion => [
+            estacion.id,
+            estacion.nombre
+        ])
+    );
+
+    const codigosBicicletas = Object.fromEntries(
+        bicicletasDB.map(bicicleta => [
+            bicicleta.id,
+            bicicleta.codigo
+        ])
+    );
+
+    // Adaptar los datos de Supabase al formato que utiliza la aplicación.
+    trips = viajes.map(viaje => ({
+        id: viaje.id,
+        bicicletaId: viaje.bicicleta_id,
+        bicicletaCodigo: codigosBicicletas[viaje.bicicleta_id] || "-",
+        fecha: viaje.fin
+            ? new Date(viaje.fin).toLocaleString("es-AR")
+            : "-",
+        timestamp: new Date(viaje.inicio).getTime(),
+        origen: nombresEstaciones[viaje.estacion_origen_id] || "-",
+        destino: nombresEstaciones[viaje.estacion_destino_id] || "-",
+        km: Number(viaje.km) || 0,
+        duracionSegundos: viaje.duracion_segundos || 0,
+        inicio: viaje.inicio,
+        fin: viaje.fin,
+        estado: viaje.estado
+    }));
+}
+
+
+
 function mostrarViajeActivo() {
     const tarjeta = document.getElementById("viajeActivoCard");
     const selector = document.getElementById("estacionDevolucion");
@@ -585,6 +698,8 @@ async function finalizarViaje() {
         viajeActivo = null;
         detenerRelojViaje();
 
+        await actualizarTiempoDisponibleHoy();
+
         await cargarEstacionesDesdeSupabase();
         actualizarSelectEstaciones();
         renderEstaciones();
@@ -617,104 +732,183 @@ async function finalizarViaje() {
 //======================================================
 
 
-    function actualizarEstadisticas() {
 
-        let km = 0;
-    
-        const contador = {};
-        
-        let viajeMasLargo = 0;
+async function actualizarTiempoDisponibleHoy() {
+    const ahora = new Date();
 
-        const estacionesUtilizadas = new Set();
-    
-        trips.forEach(viaje => {
-    
-            km += viaje.km;
-            if (viaje.km > viajeMasLargo) {
+    // Obtener el inicio y el final del día actual.
+    const inicioDia = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate()
+    );
 
-                viajeMasLargo = viaje.km;
-            
-            }
-            
-            estacionesUtilizadas.add(viaje.origen);
-            estacionesUtilizadas.add(viaje.destino);
-    
-            contador[viaje.origen] =
-                (contador[viaje.origen] || 0) + 1;
-    
-        });
-    
-        document.getElementById("kmTotales").textContent =
-            km.toFixed(1);
-    
-        if (trips.length > 0) {
-    
-            document.getElementById("ultimoViaje").textContent =
-                trips[trips.length - 1].fecha;
-    
-        } else {
+    const inicioManana = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate() + 1
+    );
 
-            document.getElementById("ultimoViaje").textContent =
-                "Sin viajes";
-        
+    // Consultar los viajes del usuario iniciados hoy.
+    const { data: viajesHoy, error } = await supabaseClient
+        .from("viajes")
+        .select("inicio, fin, duracion_segundos, estado")
+        .eq("usuario_id", usuario.id)
+        .gte("inicio", inicioDia.toISOString())
+        .lt("inicio", inicioManana.toISOString())
+        .in("estado", ["finalizado", "en_curso"]);
+
+    if (error) throw error;
+
+    let tiempoUtilizado = 0;
+
+    viajesHoy.forEach(viaje => {
+        if (viaje.estado === "finalizado") {
+            tiempoUtilizado += Number(viaje.duracion_segundos) || 0;
+        } else if (viaje.estado === "en_curso") {
+            tiempoUtilizado += Math.floor(
+                (ahora.getTime() - new Date(viaje.inicio).getTime()) / 1000
+            );
         }
-    
-        let favorita = "-";
-    
-        let max = 0;
-    
-        for (const estacion in contador) {
-    
-            if (contador[estacion] > max) {
-    
-                favorita = estacion;
-                max = contador[estacion];
-    
-            }
-    
-        }
-    
-        document.getElementById("estacionFavorita").textContent =
-            favorita;
+    });
 
-        document.getElementById("viajeMasLargo").textContent =
-            viajeMasLargo.toFixed(1);
-        
-        document.getElementById("promedioKm").textContent =
-            trips.length
-                ? (km / trips.length).toFixed(1)
-                : "0";
-        
-        document.getElementById("estacionesUsadas").textContent =
-            estacionesUtilizadas.size;
-    
-        if (trips.length === 0) {
+    const limiteDiario = MAX_TIEMPO_DIARIO / 1000;
+    const tiempoRestante = Math.max(0, limiteDiario - tiempoUtilizado);
 
-            document.getElementById("kmTotales").textContent = "0";
-            document.getElementById("viajeMasLargo").textContent = "0";
-            document.getElementById("promedioKm").textContent = "0";
-            document.getElementById("estacionesUsadas").textContent = "0";
-            document.getElementById("estacionFavorita").textContent = "-";
-        
+    const horas = Math.floor(tiempoRestante / 3600);
+    const minutos = Math.floor((tiempoRestante % 3600) / 60);
+
+    document.getElementById("tiempoDisponibleHoy").textContent =
+        `${horas} h ${minutos} min`;
+
+    return tiempoRestante;
+}
+
+
+
+
+
+function actualizarEstadisticas() {
+    let km = 0;
+    let viajeMasLargo = 0;
+
+    const contador = {};
+    const estacionesUtilizadas = new Set();
+
+    trips.forEach(viaje => {
+        const distancia = Number(viaje.km) || 0;
+
+        km += distancia;
+
+        if (distancia > viajeMasLargo) {
+            viajeMasLargo = distancia;
         }
-        
+
+        estacionesUtilizadas.add(viaje.origen);
+        estacionesUtilizadas.add(viaje.destino);
+
+        contador[viaje.origen] =
+            (contador[viaje.origen] || 0) + 1;
+    });
+
+    document.getElementById("cantidadViajes").textContent =
+        trips.length;
+
+    document.getElementById("kmTotales").textContent =
+        km.toFixed(1);
+
+    document.getElementById("viajeMasLargo").textContent =
+        viajeMasLargo.toFixed(1);
+
+    document.getElementById("promedioKm").textContent =
+        trips.length ? (km / trips.length).toFixed(1) : "0";
+
+    document.getElementById("estacionesUsadas").textContent =
+        estacionesUtilizadas.size;
+
+    // Obtener el último viaje por fecha de finalización.
+    const ultimo = [...trips].sort(
+        (a, b) => new Date(b.fin) - new Date(a.fin)
+    )[0];
+
+    document.getElementById("ultimoViaje").textContent =
+        ultimo ? ultimo.fecha : "Sin viajes";
+
+    // Obtener la estación de origen más utilizada.
+    let favorita = "-";
+    let max = 0;
+
+    for (const estacion in contador) {
+        if (contador[estacion] > max) {
+            favorita = estacion;
+            max = contador[estacion];
+        }
     }
+
+    document.getElementById("estacionFavorita").textContent =
+        favorita;
+}
 
 //======================================================
 // HISTORIAL DE VIAJES
 //======================================================
 
 function renderTrips() {
+    const table = document.getElementById("tripTable");
 
-    const table =
-        document.getElementById(
-            "tripTable"
-        );
+    if (!table) return;
 
     table.innerHTML = "";
 
-    if (trips.length === 0) {
+    // Copiamos el arreglo para no modificar el historial original.
+    let viajesMostrar = [...trips];
 
+    // Aplicar búsqueda.
+    const buscador = document.getElementById("buscarViaje");
+
+    const texto = buscador
+        ? buscador.value.toLowerCase().trim()
+        : "";
+
+    if (texto) {
+        viajesMostrar = viajesMostrar.filter(viaje =>
+            [
+                viaje.id,
+                viaje.fecha,
+                viaje.origen,
+                viaje.destino,
+                viaje.bicicletaCodigo,
+                viaje.km
+            ].join(" ").toLowerCase().includes(texto)
+        );
+    }
+
+    // Aplicar ordenamiento.
+    const orden = document.getElementById("ordenViajes")?.value;
+
+    switch (orden) {
+        case "recientes":
+            viajesMostrar.sort(
+                (a, b) => new Date(b.inicio) - new Date(a.inicio)
+            );
+            break;
+
+        case "antiguos":
+            viajesMostrar.sort(
+                (a, b) => new Date(a.inicio) - new Date(b.inicio)
+            );
+            break;
+
+        case "kmMayor":
+            viajesMostrar.sort((a, b) => b.km - a.km);
+            break;
+
+        case "kmMenor":
+            viajesMostrar.sort((a, b) => a.km - b.km);
+            break;
+    }
+
+    if (viajesMostrar.length === 0) {
         table.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center text-muted">
@@ -722,122 +916,43 @@ function renderTrips() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
-    trips.forEach(viaje => {
-
+    viajesMostrar.forEach(viaje => {
         table.innerHTML += `
             <tr>
                 <td>${viaje.id}</td>
                 <td>${viaje.fecha}</td>
                 <td>${viaje.origen}</td>
                 <td>${viaje.destino}</td>
-                <td>${viaje.km} km</td>
+                <td>${viaje.km.toFixed(1)} km</td>
             </tr>
         `;
     });
 }
 
 function filtrarViajes() {
-
-    const texto =
-        document.getElementById("buscarViaje")
-        .value
-        .toLowerCase();
-
-    const filas =
-        document.querySelectorAll("#tripTable tr");
-
-    filas.forEach(fila => {
-
-        if (
-            fila.textContent.toLowerCase().includes(texto)
-        ) {
-
-            fila.style.display = "";
-
-        }
-
-        else {
-
-            fila.style.display = "none";
-
-        }
-
-    });
-
+    renderTrips();
 }
-
 
 function ordenarViajes() {
-
-    const criterio =
-        document.getElementById("ordenViajes").value;
-
-    switch (criterio) {
-
-        case "recientes":
-
-        trips.sort((a, b) => b.timestamp - a.timestamp);
-
-        break;
-
-        case "antiguos":
-
-        trips.sort((a, b) => a.timestamp - b.timestamp);
-
-        break;
-
-        case "kmMayor":
-
-            trips.sort(
-                (a, b) => b.km - a.km
-            );
-
-            break;
-
-        case "kmMenor":
-
-            trips.sort(
-                (a, b) => a.km - b.km
-            );
-
-            break;
-
-    }
-    guardarViajes();
     renderTrips();
-
 }
 
+
 function eliminarHistorial() {
-
-    trips.length = 0;
-
-    guardarViajes();
-
-    renderTrips();
-    actualizarEstadisticas();
-
-    const modal =
-        bootstrap.Modal.getInstance(
-            document.getElementById("deleteHistoryModal")
-        );
-
-    if (modal) {
-
-        modal.hide();
-
-    }
-
-    mostrarModal(
-        "Historial eliminado",
-        "Todos los viajes fueron eliminados correctamente.",
-        "success"
+    const modal = bootstrap.Modal.getInstance(
+        document.getElementById("deleteHistoryModal")
     );
 
+    if (modal) modal.hide();
+
+    mostrarModal(
+        "Historial protegido",
+        "Los viajes registrados se conservan en la base de datos y no pueden eliminarse desde esta pantalla.",
+        "warning"
+    );
 }
 
 
@@ -866,16 +981,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     claveViajeActivo = null;
     viajeActivo = null;
 
-    // Carga temporal: los viajes todavía están en localStorage.
-    trips = JSON.parse(
-        localStorage.getItem(`trips_${usuario.email}`)
-    ) || [];
 
-    trips.forEach(viaje => {
-        if (!viaje.timestamp) {
-            viaje.timestamp = Date.now();
-        }
-    });
 
     // Mostrar los datos del perfil.
     document.getElementById("nombreUsuario").textContent =
@@ -907,19 +1013,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         await cargarEstacionesDesdeSupabase();
         await cargarViajeActivoDesdeSupabase();
+        await cargarHistorialDesdeSupabase();
+        await actualizarTiempoDisponibleHoy();
 
-    } catch (error) {
-        console.error("Error al cargar estaciones desde Supabase:", error);
+        } catch (error) {
+        console.error("Error al cargar datos desde Supabase:", error);
 
         mostrarModal(
-            "Error al cargar estaciones",
-            "No pudimos obtener las estaciones y bicicletas. Revisá la conexión con Supabase y sus políticas de acceso.",
+            "Error al cargar los datos",
+            "No pudimos obtener la información de estaciones, bicicletas o historial. Revisá la conexión con Supabase y sus políticas de acceso.",
             "danger"
         );
 
         return;
     }
-
     // Búsqueda y ordenamiento del historial.
     document
         .getElementById("buscarViaje")
