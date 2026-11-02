@@ -70,6 +70,51 @@ function showSection(sectionId) {
 // MAPA Y ESTACIONES
 //======================================================
 
+async function cargarEstacionesDesdeSupabase() {
+    if (!supabaseClient) {
+        throw new Error("El cliente de Supabase no está inicializado.");
+    }
+
+    const { data, error } = await supabaseClient
+        .from("estaciones")
+        .select("id, nombre");
+
+    if (error) {
+        throw error;
+    }
+
+    const { data: bicicletas, error: errorBicicletas } =
+        await supabaseClient
+            .from("bicicletas")
+            .select("id, codigo, estacion_id, estado");
+
+    if (errorBicicletas) {
+        throw errorBicicletas;
+    }
+
+    const estacionesActualizadas = {};
+
+    data.forEach(estacion => {
+        const disponibles = bicicletas.filter(
+            bicicleta =>
+                bicicleta.estacion_id === estacion.id &&
+                bicicleta.estado === "disponible"
+        ).length;
+
+        estacionesActualizadas[estacion.nombre] = {
+            id: estacion.id,
+            bicis: disponibles
+        };
+    });
+
+    estaciones = estacionesActualizadas;
+
+    return estaciones;
+}
+
+
+
+
 function obtenerDistancia(origen, destino) {
     if (origen === destino) return 0;
     return distancias[origen]?.[destino] ?? null;
@@ -121,51 +166,42 @@ function renderEstaciones() {
 
     const mapa = document.getElementById("mapa");
 
-    const plaza =
-    obtenerEstadoEstacion(estaciones["Plaza Independencia"].bicis);
+    if(!mapa) return;
 
-    const parque =
-    obtenerEstadoEstacion(estaciones["Parque 9 de Julio"].bicis);
+    const nombres = Object.keys(estaciones);
 
-    const terminal =
-    obtenerEstadoEstacion(estaciones["Terminal"].bicis);
+    if(nombres.length === 0){
+        mapa.innerHTML = `
+            <p class="text center text-muted">
+            No hay estaciones registradas.
+            </p> `
+            return;
+    }
 
     mapa.innerHTML = `
         <div class="row text-center">
+            ${nombres.map(nombre => {
+                const cantidad = estaciones[nombre].bicis;
+                const estado = obtenerEstadoEstacion(cantidad);
 
-            <div class="col-md-4">
-                <div class="card shadow-sm card-estacion ${plaza.cardClase}">
-                    <div class="card-body">
-                        <h5>📍 Plaza Independencia</h5>
-                        <p>🚲 ${estaciones["Plaza Independencia"].bicis} bicicletas</p>
-                        <p class="${plaza.textoClase} fw-bold">${plaza.texto}</p>
+                return `
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm card-estacion ${estado.cardClase}">
+                            <div class="card-body">
+                                <h5>📍 ${nombre}</h5>
+                                <p>🚲 ${cantidad} bicicletas</p>
+                                <p class="${estado.textoClase} fw-bold">
+                                    ${estado.texto}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm card-estacion ${parque.cardClase}">
-                    <div class="card-body">
-                        <h5>📍 Parque 9 de Julio</h5>
-                        <p>🚲 ${estaciones["Parque 9 de Julio"].bicis} bicicletas</p>
-                        <p class="${parque.textoClase} fw-bold">${parque.texto}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card shadow-sm card-estacion ${terminal.cardClase}">
-                    <div class="card-body">
-                        <h5>📍 Terminal</h5>
-                        <p>🚲 ${estaciones["Terminal"].bicis} bicicletas</p>
-                        <p class="${terminal.textoClase} fw-bold">${terminal.texto}</p>
-                    </div>
-                </div>
-            </div>
-
+                `;
+            }).join("")}
         </div>
     `;
-}
+    }
+
 
 function actualizarSelectEstaciones() {
 
@@ -669,8 +705,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("rentBikeModal")
         .addEventListener("shown.bs.modal", actualizarDistancia);
 
-    if (!localStorage.getItem("estaciones")) {
-        generarBicisAleatorias();
+    
+    try {
+        await cargarEstacionesDesdeSupabase();
+    } catch (error) {
+        console.error("Error al cargar estaciones desde Supabase:", error);
+    
+        mostrarModal(
+            "Error al cargar estaciones",
+            "No pudimos obtener las estaciones y bicicletas. Revisá la conexión con Supabase y sus políticas de acceso.",
+            "danger"
+        );
+    
+        return;
     }
 
     // Búsqueda y ordenamiento del historial.
