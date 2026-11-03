@@ -417,15 +417,109 @@
 
                 </div>
 
-                <div
-                    id="distanceInfo"
-                    class="alert alert-info">
+    <div
+        id="distanceInfo"
+        class="alert alert-info">
 
-                    Distancia estimada: --
+        Distancia estimada: --
+
+    </div>
+
+    <hr>
+
+    <h6 class="fw-bold mb-3">Seleccioná tu plan de alquiler</h6>
+
+    <div class="row g-3">
+
+        <!-- PLAN POR KILÓMETRO -->
+        <div class="col-12 col-md-6">
+            <label class="card plan-card plan-plateado h-100" for="planPorKm">
+                <div class="card-body text-center p-4">
+
+                    <div class="plan-icon mb-2">🥈</div>
+
+                    <h5 class="fw-bold">PLAN POR KILÓMETRO</h5>
+
+                    <h2 class="fw-bold mb-0">$250</h2>
+                    <p class="text-muted mb-3">ARS por kilómetro</p>
+
+                    <hr>
+
+                    <p class="mb-2">Pagás según la distancia recorrida.</p>
+
+                    <p class="text-muted small mb-3">
+                        El pago se realiza al finalizar cada viaje.
+                    </p>
+
+                    <div class="form-check d-flex justify-content-center">
+                        <input
+                            class="form-check-input me-2"
+                            type="radio"
+                            name="tipoPlan"
+                            id="planPorKm"
+                            value="por_km"
+                            checked
+                            onchange="seleccionarPlan('por_km')">
+
+                        <label class="form-check-label fw-semibold" for="planPorKm">
+                            Seleccionar plan
+                        </label>
+                    </div>
 
                 </div>
+            </label>
+        </div>
 
-            </div>
+        <!-- MEMBRESÍA MENSUAL -->
+        <div class="col-12 col-md-6">
+            <label class="card plan-card plan-dorado h-100" for="planMensual">
+                <div class="card-body text-center p-4">
+
+                    <div class="plan-icon mb-2">🥇</div>
+
+                    <h5 class="fw-bold">MEMBRESÍA MENSUAL</h5>
+
+                    <h2 class="fw-bold mb-0">$20.000</h2>
+                    <p class="text-muted mb-3">ARS cada 30 días</p>
+
+                    <hr>
+
+                    <p class="mb-2">Cantidad ilimitada de viajes.</p>
+
+                    <p class="text-muted small mb-3">
+                        Sin cargos adicionales por kilómetro.
+                    </p>
+
+                    <div class="form-check d-flex justify-content-center">
+                        <input
+                            class="form-check-input me-2"
+                            type="radio"
+                            name="tipoPlan"
+                            id="planMensual"
+                            value="mensual"
+                            onchange="seleccionarPlan('mensual')">
+
+                        <label class="form-check-label fw-semibold"     for="planMensual">
+                            Seleccionar plan
+                        </label>
+                    </div>
+
+                </div>
+            </label>
+        </div>
+
+    </div>
+
+        <div class="alert alert-secondary mt-3 mb-0">
+            <small>
+                Los pagos son simulados y se registran en el sistema con fines
+                académicos. No se realizan cobros reales.
+            </small>
+        </div>
+
+
+</div>
+
 
             <div class="modal-footer">
 
@@ -455,7 +549,121 @@
 
 </div>
 
-<!-- Modal éxito -->
+
+
+<!-- Modal de pago con tarjeta -->
+<div class="modal fade" id="paymentModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    💳 Pago de membresía mensual
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="text-center mb-4">
+                    <h3 class="text-success fw-bold">$20.000 ARS</h3>
+                    <p class="text-muted mb-0">
+                        Membresía mensual - 30 días
+                    </p>
+                </div>
+
+                <div class="alert alert-info">
+                    <small>
+                        Simulación académica. Ingresá datos ficticios.
+                        No se realizarán cobros reales ni se guardarán
+                        los datos de la tarjeta.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="numeroTarjeta" class="form-label">
+                        Número de tarjeta
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           id="numeroTarjeta"
+                           placeholder="1234 5678 9012 3456"
+                           maxlength="19"
+                           inputmode="numeric"
+                           autocomplete="off">
+                </div>
+
+                <div class="row">
+
+                    <div class="col-6 mb-3">
+                        <label for="vencimientoTarjeta"
+                               class="form-label">
+                            Vencimiento
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="vencimientoTarjeta"
+                               placeholder="MM/AA"
+                               maxlength="5"
+                               inputmode="numeric"
+                               autocomplete="off">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                        <label for="codigoSeguridad"
+                               class="form-label">
+                            Código de seguridad
+                        </label>
+
+                        <input type="password"
+                               class="form-control"
+                               id="codigoSeguridad"
+                               placeholder="123"
+                               maxlength="3"
+                               inputmode="numeric"
+                               autocomplete="off">
+                    </div>
+
+                </div>
+
+                <div id="errorPago"
+                     class="alert alert-danger d-none"
+                     role="alert">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-success"
+                        id="btnPagar"
+                        onclick="procesarPagoMembresia()">
+                    Pagar
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Modal éxito -->
 <div class="modal fade"
      id="successModal"

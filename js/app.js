@@ -4,6 +4,174 @@
 
 let usuario = null;
 let trips = [];
+let tipoPlanSeleccionado = 'por_km';
+
+
+function seleccionarPlan(tipo) {
+    tipoPlanSeleccionado = tipo;
+}
+
+//======================================================
+// MEMBRESÍAS
+//======================================================
+
+async function consultarMembresiaActiva() {
+
+    const { data, error } = await supabaseClient
+        .from("suscripciones")
+        .select("id, fecha_inicio, fecha_fin, estado")
+        .eq("usuario_id", usuario.id)
+        .eq("estado", "activa")
+        .lte("fecha_inicio", new Date().toISOString())
+        .gt("fecha_fin", new Date().toISOString())
+        .order("fecha_fin", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+
+//======================================================
+// PAGO SIMULADO DE MEMBRESÍA
+//======================================================
+
+function validarDatosTarjeta() {
+
+    const numero = document.getElementById("numeroTarjeta").value
+        .replace(/\s/g, "");
+
+    const vencimiento = document.getElementById("vencimientoTarjeta").value.trim();
+
+    const codigo = document.getElementById("codigoSeguridad").value.trim();
+
+    // Validar los 16 dígitos de la tarjeta.
+    if (!/^\d{16}$/.test(numero)) {
+        return "El número de tarjeta debe contener exactamente 16 dígitos.";
+    }
+
+    // Validar formato MM/AA.
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(vencimiento)) {
+        return "Ingresá un vencimiento válido en formato MM/AA.";
+    }
+
+    // Validar que la tarjeta no esté vencida.
+    const [mes, anio] = vencimiento.split("/").map(Number);
+
+    const fechaVencimiento = new Date(2000 + anio, mes, 1);
+    const fechaActual = new Date();
+    const primerDiaMesActual = new Date(
+        fechaActual.getFullYear(),
+        fechaActual.getMonth(),
+        1
+    );
+
+    if (fechaVencimiento <= primerDiaMesActual) {
+        return "La tarjeta está vencida. Ingresá una fecha posterior al mes actual.";
+    }
+
+    // Validar código de seguridad.
+    if (!/^\d{3}$/.test(codigo)) {
+        return "El código de seguridad debe contener exactamente 3 dígitos.";
+    }
+
+    return null;
+}
+
+async function procesarPagoMembresia() {
+
+    const boton = document.getElementById("btnPagar");
+    const mensajeError = document.getElementById("errorPago");
+
+    mensajeError.classList.add("d-none");
+    mensajeError.textContent = "";
+
+    const errorValidacion = validarDatosTarjeta();
+
+    if (errorValidacion) {
+        mensajeError.textContent = errorValidacion;
+        mensajeError.classList.remove("d-none");
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Procesando pago...";
+
+    try {
+
+        // Registrar el pago y activar la membresía en Supabase.
+        const { data, error } = await supabaseClient.rpc(
+            "procesar_pago_membresia_simulada"
+        );
+
+        if (error) throw error;
+
+        console.log("Pago registrado:", data);
+
+        // Cerrar el formulario de pago.
+       const paymentModalElement = document.getElementById("paymentModal");
+
+        const paymentModal = bootstrap.Modal.getInstance(paymentModalElement);
+
+        if (paymentModal) {
+            const modalCerrado = new Promise(resolve => {
+                paymentModalElement.addEventListener(
+                    "hidden.bs.modal",
+                    resolve,
+                    { once: true }
+                );
+            });
+        
+            paymentModal.hide();
+        
+            await modalCerrado;
+        }
+
+// Iniciar automáticamente el alquiler con el origen y destino seleccionados.
+const alquilerIniciado = await rentBike();
+
+        if (!alquilerIniciado) {
+            throw new Error(
+                "El pago fue aprobado, pero no se pudo iniciar el alquiler. La membresía quedó registrada."
+            );
+        }
+
+        // Mostrar la confirmación del pago
+
+        mostrarModal(
+            "¡Transacción aprobada!",
+            "Tu pago fue aprobado correctamente.",
+            "success"
+        );
+
+        // Volver al inicio después de 5 segundos.
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 5000);
+
+    } catch (error) {
+
+        console.error("Error al procesar el pago:", error);
+
+        mensajeError.textContent =
+            error.message || "No se pudo procesar el pago. Intentá nuevamente.";
+
+        mensajeError.classList.remove("d-none");
+
+    } finally {
+
+        boton.disabled = false;
+        boton.textContent = "Pagar";
+
+    }
+}
+
+
+
 
 // =========================
 // CONFIGURACIÓN DE ALQUILER
@@ -299,13 +467,13 @@ async function rentBike() {
 
         if (tiempoDisponible <= 0) {
             alert("Alcanzaste el límite máximo de 4 horas de alquiler por día. Podrás volver a alquilar mañana.");
-            return;
+            return false;
         }
 
     } catch (error) {
         console.error("Error al verificar el tiempo disponible:", error);
         alert("No se pudo verificar el tiempo disponible. Intentá nuevamente.");
-        return;
+        return false;
     }
 
 
@@ -314,9 +482,46 @@ async function rentBike() {
     const destino = document.getElementById("destino").value;
     const boton = document.getElementById("btnAlquilar");
 
+    // Verificar membresía si seleccionó el plan mensual.
+if (tipoPlanSeleccionado === "mensual") {
+
+    try {
+        const membresia = await consultarMembresiaActiva();
+
+        if (!membresia) {
+
+        const paymentModal = new bootstrap.Modal(
+        document.getElementById("paymentModal")
+        );
+
+        paymentModal.show();
+
+        return false;
+
+        return;
+        }
+
+        console.log(
+            "Membresía activa hasta:",
+            new Date(membresia.fecha_fin).toLocaleDateString("es-AR")
+        );
+
+    } catch (error) {
+        console.error("Error al consultar la membresía:", error);
+
+        mostrarModal(
+            "Error al consultar la membresía",
+            "No pudimos verificar tu membresía. Intentá nuevamente.",
+            "danger"
+        );
+        return;
+    }
+}
+
+
     if (origen === destino) {
         mostrarModal("Ruta inválida", "Elegí dos estaciones distintas.", "warning");
-        return;
+        return false;
     }
 
     if (!estaciones[origen] || estaciones[origen].bicis === 0) {
@@ -345,14 +550,15 @@ async function rentBike() {
         Alquilando bicicleta...
     `;
 
-    try {
-        const { data, error } = await supabaseClient.rpc(
-            "iniciar_alquiler",
-            {
-                p_estacion_origen_id: estaciones[origen].id,
-                p_estacion_destino_id: estaciones[destino].id
-            }
-        );
+try {
+    const { data, error } = await supabaseClient.rpc(
+        "iniciar_alquiler",
+        {
+            p_estacion_origen_id: estaciones[origen].id,
+            p_estacion_destino_id: estaciones[destino].id,
+            p_tipo_plan: tipoPlanSeleccionado
+        }
+    );
 
         if (error) throw error;
 
@@ -395,6 +601,8 @@ async function rentBike() {
             successModal.hide();
         }, 2500);
 
+        return true;
+
     } catch (error) {
         console.error("Error al iniciar el alquiler:", error);
 
@@ -403,6 +611,8 @@ async function rentBike() {
             error.message || "Ocurrió un error al registrar el alquiler.",
             "danger"
         );
+
+        return false;
 
     } finally {
         boton.disabled = false;
