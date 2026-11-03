@@ -784,7 +784,25 @@ async function actualizarTiempoDisponibleHoy() {
     return tiempoRestante;
 }
 
+function iniciarActualizacionTiempoDisponible() {
 
+    // Evitar crear más de un intervalo.
+    if (intervaloTiempoDisponible !== null) {
+        clearInterval(intervaloTiempoDisponible);
+    }
+
+    // Actualizar el tiempo disponible cada 60 segundos.
+    intervaloTiempoDisponible = setInterval(async () => {
+        try {
+            await actualizarTiempoDisponibleHoy();
+        } catch (error) {
+            console.error(
+                "Error al actualizar el tiempo disponible:",
+                error
+            );
+        }
+    }, 60000);
+}
 
 
 
@@ -1015,6 +1033,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await cargarViajeActivoDesdeSupabase();
         await cargarHistorialDesdeSupabase();
         await actualizarTiempoDisponibleHoy();
+        iniciarActualizacionTiempoDisponible();
 
         } catch (error) {
         console.error("Error al cargar datos desde Supabase:", error);
