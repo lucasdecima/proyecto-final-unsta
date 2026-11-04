@@ -177,8 +177,10 @@ const alquilerIniciado = await rentBike();
 // CONFIGURACIÓN DE ALQUILER
 // =========================
 
-const MAX_TIEMPO_VIAJE = 60 * 60 * 1000; // 1 hora
-const MAX_TIEMPO_DIARIO = 4 * 60 * 60 * 1000; // 4 horas
+const MAX_TIEMPO_VIAJE = 60 * 60 * 1000; // 1 hora por viaje
+
+const MAX_TIEMPO_DIARIO_BASICO = 4 * 60 * 60; // 4 horas en segundos
+const MAX_TIEMPO_DIARIO_MENSUAL = 8 * 60 * 60; // 8 horas en segundos
 
 let claveViajeActivo = null;
 let viajeActivo = null;
@@ -461,14 +463,35 @@ function guardarEstaciones() {
 
 async function rentBike() {
 
+        // Verificar si el usuario tiene un viaje pendiente de devolución.
+    if (viajeActivo) {
+        mostrarModal(
+            "Viaje pendiente de devolución",
+            "Tenés una bicicleta pendiente de devolución. Finalizá tu viaje actual antes de iniciar otro alquiler.",
+            "warning"
+        );
+
+        return false;
+    }
+
+
         // Verificar el tiempo disponible del usuario para hoy.
     try {
         const tiempoDisponible = await actualizarTiempoDisponibleHoy();
 
         if (tiempoDisponible <= 0) {
-            alert("Alcanzaste el límite máximo de 4 horas de alquiler por día. Podrás volver a alquilar mañana.");
-            return false;
-        }
+    const membresia = await consultarMembresiaActiva();
+
+    const limite = membresia ? "8 horas" : "4 horas";
+
+    mostrarModal(
+        "Límite diario alcanzado",
+        `Alcanzaste el límite máximo de ${limite} de alquiler por día correspondiente a tu plan. Podrás volver a alquilar mañana.`,
+        "warning"
+    );
+
+    return false;
+    }
 
     } catch (error) {
         console.error("Error al verificar el tiempo disponible:", error);
@@ -498,7 +521,6 @@ if (tipoPlanSeleccionado === "mensual") {
 
         return false;
 
-        return;
         }
 
         console.log(
@@ -514,7 +536,7 @@ if (tipoPlanSeleccionado === "mensual") {
             "No pudimos verificar tu membresía. Intentá nuevamente.",
             "danger"
         );
-        return;
+        return false; 
     }
 }
 
@@ -530,7 +552,7 @@ if (tipoPlanSeleccionado === "mensual") {
             "No hay bicicletas disponibles en esta estación.",
             "warning"
         );
-        return;
+        return false;
     }
 
     const km = obtenerDistancia(origen, destino);
@@ -541,7 +563,7 @@ if (tipoPlanSeleccionado === "mensual") {
             "No hay distancia registrada para esa ruta.",
             "danger"
         );
-        return;
+        return false;
     }
 
     boton.disabled = true;
@@ -827,7 +849,6 @@ function detenerRelojViaje() {
     }
 }
 
-
 function actualizarRelojViaje() {
     if (!viajeActivo) return;
 
@@ -847,16 +868,14 @@ function actualizarRelojViaje() {
 
     if (transcurrido >= MAX_TIEMPO_VIAJE) {
         alerta.className = "alert alert-danger mt-3 mb-3";
-        alerta.textContent = "🔴 Se superó el límite de 1 hora de viaje.";
-    } else if (transcurrido >= MAX_TIEMPO_VIAJE * 0.8) {
-        alerta.className = "alert alert-warning mt-3 mb-3";
-        alerta.textContent = "🟡 Tu viaje está cerca del límite de 1 hora.";
+        alerta.textContent =
+            "🔴 ¡Tiempo máximo alcanzado! Se cumplió el límite de 60 minutos. Por favor, dirigite a una estación para devolver la bicicleta.";
     } else {
         alerta.className = "alert alert-success mt-3 mb-3";
-        alerta.textContent = "🟢 Tenés hasta 1 hora para completar este viaje.";
+        alerta.textContent =
+            "🟢 Tiempo máximo por viaje: 60 minutos.";
     }
 }
-
 
 async function finalizarViaje() {
     if (!viajeActivo) {
@@ -982,7 +1001,12 @@ async function actualizarTiempoDisponibleHoy() {
         }
     });
 
-    const limiteDiario = MAX_TIEMPO_DIARIO / 1000;
+    // Determinar el límite diario según la membresía activa.
+    const membresia = await consultarMembresiaActiva();
+
+    const limiteDiario = membresia
+    ? MAX_TIEMPO_DIARIO_MENSUAL
+    : MAX_TIEMPO_DIARIO_BASICO;    
     const tiempoRestante = Math.max(0, limiteDiario - tiempoUtilizado);
 
     const horas = Math.floor(tiempoRestante / 3600);
