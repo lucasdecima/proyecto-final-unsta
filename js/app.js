@@ -859,16 +859,6 @@ function actualizarRelojViaje() {
     const inicio = new Date(viajeActivo.inicio).getTime();
     const transcurrido = Date.now() - inicio;
 
-
-    //agregado temporal 
-
-    console.log("Inicio recibido:", viajeActivo.inicio);
-console.log("Inicio interpretado:", new Date(inicio).toString());
-console.log("Hora de la computadora:", new Date().toString());
-console.log("Diferencia en segundos:", (Date.now() - inicio) / 1000);
-
-////agregado temporal
-
     const horas = Math.floor(transcurrido / 3600000);
     const minutos = Math.floor((transcurrido % 3600000) / 60000);
     const segundos = Math.floor((transcurrido % 60000) / 1000);
