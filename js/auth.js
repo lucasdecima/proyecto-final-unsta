@@ -6,6 +6,7 @@ const SUPABASE_URL = "https://ovbiongsunezeclvjgpj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_MgubmqHLwlwnxShupDsA0A_6YZt9T8K";
 
 let supabaseClient = null;
+let usuarioAutenticado = null;
 
 if (window.supabase && window.supabase.createClient) {
     supabaseClient = window.supabase.createClient(
@@ -268,7 +269,7 @@ async function registrar() {
         }
 
         if (!data.session) {
-            localStorage.removeItem("usuarioLogueado");
+            usuarioAutenticado = null;
             window.location.replace("login.html");
             return false;
         }
@@ -394,17 +395,12 @@ async function login() {
 
         // Compatibilidad con el código existente de index.html.
         // Nunca guardamos la contraseña en localStorage.
-        const usuarioLocal = {
+        usuarioAutenticado = {
             id: usuarioAuth.id,
             nombre: nombre,
             email: usuarioAuth.email,
             fechaRegistro: perfil?.fecha_registro || null
         };
-
-        localStorage.setItem(
-            "usuarioLogueado",
-            JSON.stringify(usuarioLocal)
-        );
 
         const modal = mostrarModal(
             "",
@@ -470,7 +466,7 @@ async function confirmarCerrarSesion() {
             }
         }
 
-        localStorage.removeItem("usuarioLogueado");
+        usuarioAutenticado = null;
         window.location.href = "login.html";
 
     } catch (error) {
@@ -525,6 +521,9 @@ function crearFondoBicis() {
 //============================================
 //  VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
 //============================================ 
+//============================================
+//  VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
+//============================================ 
 
 async function verificarSesion() {
     const esPaginaPrincipal =
@@ -535,8 +534,9 @@ async function verificarSesion() {
         return true;
     }
 
+    usuarioAutenticado = null;
+
     if (!supabaseClient) {
-        localStorage.removeItem("usuarioLogueado");
         window.location.replace("login.html");
         return false;
     }
@@ -546,7 +546,6 @@ async function verificarSesion() {
             await supabaseClient.auth.getSession();
 
         if (error || !data.session) {
-            localStorage.removeItem("usuarioLogueado");
             window.location.replace("login.html");
             return false;
         }
@@ -567,7 +566,7 @@ async function verificarSesion() {
             );
         }
 
-        const usuarioLocal = {
+        usuarioAutenticado = {
             id: usuarioAuth.id,
             nombre:
                 perfil?.nombre ||
@@ -577,11 +576,6 @@ async function verificarSesion() {
             fechaRegistro: perfil?.fecha_registro || null
         };
 
-        localStorage.setItem(
-            "usuarioLogueado",
-            JSON.stringify(usuarioLocal)
-        );
-
         return true;
 
     } catch (error) {
@@ -590,13 +584,11 @@ async function verificarSesion() {
             error
         );
 
-        localStorage.removeItem("usuarioLogueado");
+        usuarioAutenticado = null;
         window.location.replace("login.html");
         return false;
     }
 }
-
-
 
 // ============================================
 // INICIALIZACIÓN

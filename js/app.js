@@ -5,6 +5,7 @@
 let usuario = null;
 let trips = [];
 let tipoPlanSeleccionado = 'por_km';
+let cargosPendientes = [];
 
 
 function seleccionarPlan(tipo) {
@@ -75,6 +76,42 @@ function validarDatosTarjeta() {
     }
 
     // Validar código de seguridad.
+    if (!/^\d{3}$/.test(codigo)) {
+        return "El código de seguridad debe contener exactamente 3 dígitos.";
+    }
+
+    return null;
+}
+
+
+function validarDatosTarjetaPenalizaciones() {
+    const numero = document.getElementById("numeroTarjetaPenalizaciones").value
+        .replace(/\s/g, "");
+
+    const vencimiento = document.getElementById("vencimientoTarjetaPenalizaciones").value.trim();
+    const codigo = document.getElementById("codigoSeguridadPenalizaciones").value.trim();
+
+    if (!/^\d{16}$/.test(numero)) {
+        return "El número de tarjeta debe contener exactamente 16 dígitos.";
+    }
+
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(vencimiento)) {
+        return "Ingresá un vencimiento válido en formato MM/AA.";
+    }
+
+    const [mes, anio] = vencimiento.split("/").map(Number);
+    const fechaVencimiento = new Date(2000 + anio, mes, 1);
+    const fechaActual = new Date();
+    const primerDiaMesActual = new Date(
+        fechaActual.getFullYear(),
+        fechaActual.getMonth(),
+        1
+    );
+
+    if (fechaVencimiento <= primerDiaMesActual) {
+        return "La tarjeta está vencida. Ingresá una fecha posterior al mes actual.";
+    }
+
     if (!/^\d{3}$/.test(codigo)) {
         return "El código de seguridad debe contener exactamente 3 dígitos.";
     }
@@ -188,16 +225,7 @@ let viajeActivo = null;
 let relojIntervalo = null;
 let intervaloTiempoDisponible = null;
 
-let estaciones = 
-        JSON.parse(localStorage.getItem("estaciones"));
-if (!estaciones) {
-    estaciones = {
-        "Plaza Independencia": { bicis: 0 },
-        "Parque 9 de Julio": { bicis: 0 },
-        "Terminal": { bicis: 0 }
-    };
-}
-
+let estaciones = {}
 
 const distancias = {
     "Plaza Independencia": {
@@ -402,17 +430,7 @@ function actualizarSelectEstaciones() {
 
 }
 
-function generarBicisAleatorias() {
-    estaciones["Plaza Independencia"].bicis = Math.floor(Math.random() * 6) + 1;
-    estaciones["Parque 9 de Julio"].bicis = Math.floor(Math.random() * 6) + 1;
-    estaciones["Terminal"].bicis = Math.floor(Math.random() * 6) + 1;
 
-    localStorage.setItem(
-        "estaciones",
-        JSON.stringify(estaciones)
-    );
-
-}
 
 function actualizarDistancia() {
 
@@ -439,23 +457,9 @@ function actualizarDistancia() {
             : "Distancia no disponible para esta ruta";
 }
 
-function guardarViajes() {
 
-    localStorage.setItem(
-        `trips_${usuario.email}`,
-        JSON.stringify(trips)
-    );
 
-}
 
-function guardarEstaciones() {
-
-    localStorage.setItem(
-        "estaciones",
-        JSON.stringify(estaciones)
-    );
-
-}
 //======================================================
 // ALQUILER DE BICICLETAS
 //======================================================
@@ -855,6 +859,16 @@ function actualizarRelojViaje() {
     const inicio = new Date(viajeActivo.inicio).getTime();
     const transcurrido = Date.now() - inicio;
 
+
+    //agregado temporal 
+
+    console.log("Inicio recibido:", viajeActivo.inicio);
+console.log("Inicio interpretado:", new Date(inicio).toString());
+console.log("Hora de la computadora:", new Date().toString());
+console.log("Diferencia en segundos:", (Date.now() - inicio) / 1000);
+
+////agregado temporal
+
     const horas = Math.floor(transcurrido / 3600000);
     const minutos = Math.floor((transcurrido % 3600000) / 60000);
     const segundos = Math.floor((transcurrido % 60000) / 1000);
@@ -959,6 +973,177 @@ async function finalizarViaje() {
 //======================================================
 // PERFIL Y ESTADÍSTICAS
 //======================================================
+
+
+//**********CARGOS PENDIENTES*******//
+
+
+function formatearImporte(importe) {
+    return Number(importe).toLocaleString("es-AR", {
+        style: "currency",
+        currency: "ARS"
+    });
+}
+
+
+async function cargarCargosPendientesDesdeSupabase() {
+
+    const lista = document.getElementById("listaCargosPendientes");
+    const cantidad = document.getElementById("cantidadCargosPendientes");
+    const total = document.getElementById("totalCargosPendientes");
+    const boton = document.getElementById("btnPagarCargos");
+    const mensaje = document.getElementById("mensajeCargosPendientes");
+
+    boton.disabled = true;
+    lista.innerHTML = `
+        <p class="text-muted mb-0">
+            Consultando cargos pendientes...
+        </p>
+    `;
+
+    mensaje.classList.add("d-none");
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("penalizaciones")
+            .select("id, viaje_id, minutos_excedidos, importe, fecha")
+            .eq("usuario_id", usuario.id)
+            .eq("estado", "pendiente")
+            .order("fecha", { ascending: false });
+
+        if (error) throw error;
+
+        cargosPendientes = data || [];
+
+        cantidad.textContent = cargosPendientes.length;
+
+        const importeTotal = cargosPendientes.reduce(
+            (acumulado, cargo) =>
+                acumulado + Number(cargo.importe),
+            0
+        );
+
+        total.textContent = formatearImporte(importeTotal);
+
+        if (cargosPendientes.length === 0) {
+
+            lista.innerHTML = `
+                <p class="text-muted mb-0">
+                    No tenés cargos pendientes de pago.
+                </p>
+            `;
+
+            boton.disabled = true;
+            return;
+        }
+
+        lista.innerHTML = cargosPendientes.map(cargo => {
+
+            const fecha = new Date(cargo.fecha)
+                .toLocaleString("es-AR");
+
+            return `
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <strong>Cargo por exceso de tiempo</strong>
+
+                            <div class="text-muted small">
+                                Viaje #${Number(cargo.viaje_id)}
+                            </div>
+
+                            <div class="text-muted small">
+                                ${Number(cargo.minutos_excedidos)} minutos excedidos
+                            </div>
+
+                            <div class="text-muted small">
+                                ${fecha}
+                            </div>
+                        </div>
+
+                        <strong class="text-danger">
+                            ${formatearImporte(cargo.importe)}
+                        </strong>
+
+                    </div>
+                </div>
+            `;
+
+        }).join("");
+
+        boton.disabled = false;
+
+    } catch (error) {
+
+        console.error("Error al consultar cargos pendientes:", error);
+
+        cargosPendientes = [];
+
+        cantidad.textContent = "0";
+        total.textContent = formatearImporte(0);
+
+        lista.innerHTML = `
+            <p class="text-danger mb-0">
+                No se pudieron consultar los cargos pendientes.
+            </p>
+        `;
+
+        mensaje.textContent =
+            error.message || "Ocurrió un error al consultar los cargos.";
+
+        mensaje.className = "alert alert-danger mt-3";
+        mensaje.classList.remove("d-none");
+
+        boton.disabled = true;
+    }
+}
+
+async function pagarCargosPendientes() {
+
+    if (cargosPendientes.length === 0) {
+
+        mostrarModal(
+            "Sin cargos pendientes",
+            "No tenés cargos pendientes para pagar.",
+            "info"
+        );
+
+        return;
+    }
+
+    // Calcular el total de los cargos pendientes.
+    const total = cargosPendientes.reduce(
+        (acumulado, cargo) => acumulado + Number(cargo.importe),
+        0
+    );
+
+    // Mostrar el importe en el nuevo modal.
+    document.getElementById("totalPenalizacionesModal").textContent =
+        formatearImporte(total);
+
+    // Limpiar los campos de tarjeta.
+    document.getElementById("numeroTarjetaPenalizaciones").value = "";
+    document.getElementById("vencimientoTarjetaPenalizaciones").value = "";
+    document.getElementById("codigoSeguridadPenalizaciones").value = "";
+
+    // Limpiar errores anteriores.
+    const errorPago = document.getElementById("errorPagoPenalizaciones");
+    errorPago.textContent = "";
+    errorPago.classList.add("d-none");
+
+    // Abrir el modal de pago.
+    const modal = bootstrap.Modal.getOrCreateInstance(
+        document.getElementById("penaltyPaymentModal")
+    );
+
+    modal.show();
+}
+
+
+
+
 
 
 
@@ -1221,9 +1406,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    usuario = JSON.parse(
-        localStorage.getItem("usuarioLogueado")
-    );
+    usuario = usuarioAutenticado;
 
     if (!usuario) {
         window.location.replace("login.html");
@@ -1280,6 +1463,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         return;
     }
+
+    // Consultar los cargos pendientes del usuario.
+    await cargarCargosPendientesDesdeSupabase();
+
     // Búsqueda y ordenamiento del historial.
     document
         .getElementById("buscarViaje")

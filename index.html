@@ -333,6 +333,56 @@
                         <strong>Tiempo disponible hoy: <span id="tiempoDisponibleHoy">4 horas</span></strong>
                         
                     </p>
+
+
+                        <hr class="my-4">
+
+                        <div id="cargosPendientesCard">
+                        
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Cargos pendientes</h5>
+                                <span class="badge bg-warning text-dark" id="cantidadCargosPendientes">
+                                    0
+                                </span>
+                            </div>
+                        
+                            <div class="alert alert-light border">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>Total pendiente:</strong>
+                                    <strong class="text-danger fs-5" id="totalCargosPendientes">
+                                        $0,00
+                                    </strong>
+                                </div>
+                            </div>
+                        
+                            <div id="listaCargosPendientes">
+                                <p class="text-muted mb-0">
+                                    Consultando cargos pendientes...
+                                </p>
+                            </div>
+                        
+                            <div id="mensajeCargosPendientes"
+                                 class="alert alert-info d-none mt-3"
+                                 role="alert">
+                            </div>
+                        
+                            <button
+                                type="button"
+                                id="btnPagarCargos"
+                                class="btn btn-success w-100 mt-3"
+                                onclick="pagarCargosPendientes()"
+                                disabled>
+                                💳 Pagar cargos pendientes
+                            </button>
+                        
+                            <small class="text-muted d-block mt-2">
+                                Los pagos son simulados y se registran con fines académicos.
+                                No se realizan cobros reales.
+                            </small>
+                        
+                        </div>
+
+
             </div>
 
         </div>
@@ -660,9 +710,124 @@
 
         </div>
     </div>
+
 </div>
 
 
+<!-- Modal de pago de penalizaciones -->
+<div class="modal fade" id="penaltyPaymentModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    💳 Pago de penalizaciones
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="text-center mb-4">
+                    <h3 class="text-success fw-bold"
+                        id="totalPenalizacionesModal">
+                        $0,00
+                    </h3>
+                    <p class="text-muted mb-0">
+                        Total de cargos pendientes
+                    </p>
+                </div>
+
+                <div class="alert alert-info">
+                    <small>
+                        Simulación académica. Ingresá datos ficticios.
+                        No se realizarán cobros reales ni se guardarán
+                        los datos de la tarjeta.
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="numeroTarjetaPenalizaciones"
+                           class="form-label">
+                        Número de tarjeta
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           id="numeroTarjetaPenalizaciones"
+                           placeholder="1234 5678 9012 3456"
+                           maxlength="19"
+                           inputmode="numeric"
+                           autocomplete="off">
+                </div>
+
+                <div class="row">
+
+                    <div class="col-6 mb-3">
+                        <label for="vencimientoTarjetaPenalizaciones"
+                               class="form-label">
+                            Vencimiento
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="vencimientoTarjetaPenalizaciones"
+                               placeholder="MM/AA"
+                               maxlength="5"
+                               inputmode="numeric"
+                               autocomplete="off">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                        <label for="codigoSeguridadPenalizaciones"
+                               class="form-label">
+                            Código de seguridad
+                        </label>
+
+                        <input type="password"
+                               class="form-control"
+                               id="codigoSeguridadPenalizaciones"
+                               placeholder="123"
+                               maxlength="3"
+                               inputmode="numeric"
+                               autocomplete="off">
+                    </div>
+
+                </div>
+
+                <div id="errorPagoPenalizaciones"
+                     class="alert alert-danger d-none"
+                     role="alert">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-success"
+                        id="btnConfirmarPagoPenalizaciones"
+                        onclick="procesarPagoPenalizaciones()">
+                    Confirmar pago
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <!-- Modal éxito -->
 <div class="modal fade"
