@@ -326,3 +326,72 @@ footer .text-center.p-3{
 .plan-dorado:has(input:checked) {
     border-color: #b8860b;
 }
+
+
+
+
+/* ==========================================
+   MAPA INTERACTIVO
+========================================== */
+
+#mapa {
+    height: 480px;
+    width: 100%;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 1px solid #d8e2dc;
+    border-radius: 12px;
+    z-index: 1;
+}
+
+@media (max-width: 576px) {
+    #mapa {
+        height: 380px;
+    }
+}
+
+
+
+/* ==========================================
+   MARCADORES DEL MAPA
+========================================== */
+
+.marcador-bici-wrapper {
+    background: transparent;
+    border: none;
+}
+
+.marcador-bici-contenido {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 70px;
+    height: 45px;
+    background: white;
+    border: 2px solid #198754;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    font-weight: bold;
+}
+
+.marcador-bici-icono {
+    font-size: 21px;
+}
+
+.marcador-bici-cantidad {
+    font-size: 17px;
+    color: #212529;
+}
+
+.marcador-bici-contenido.estado-disponible {
+    border-color: #198754;
+}
+
+.marcador-bici-contenido.estado-pocas {
+    border-color: #ffc107;
+}
+
+.marcador-bici-contenido.estado-vacia {
+    border-color: #dc3545;
+}

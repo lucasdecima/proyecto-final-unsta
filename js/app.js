@@ -227,6 +227,115 @@ let intervaloTiempoDisponible = null;
 
 let estaciones = {}
 
+// ============================================
+// CONFIGURACIÓN DEL MAPA INTERACTIVO
+// ============================================
+
+let mapaLeaflet = null;
+let marcadoresEstaciones = {};
+
+
+
+
+// Inicializar mapa interactivo
+function inicializarMapa() {
+
+    const elementoMapa = document.getElementById("mapa");
+
+    if (!elementoMapa || typeof L === "undefined") {
+        console.error("No se pudo cargar Leaflet o encontrar el contenedor del mapa.");
+        return;
+    }
+
+    // Evitar inicializar el mapa más de una vez
+    if (mapaLeaflet) {
+        return;
+    }
+
+    mapaLeaflet = L.map("mapa").setView([-26.829, -65.195], 14);
+
+    // Cargar mapa de OpenStreetMap
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(mapaLeaflet);
+}
+
+
+
+// ============================================
+// CREAR MARCADORES DE LAS ESTACIONES
+// ============================================
+
+function actualizarMarcadoresMapa() {
+
+    if (!mapaLeaflet) {
+        return;
+    }
+
+    // Eliminar los marcadores anteriores
+    Object.values(marcadoresEstaciones).forEach(marcador => {
+        mapaLeaflet.removeLayer(marcador);
+    });
+
+    marcadoresEstaciones = {};
+
+    // Recorrer las estaciones disponibles
+    Object.entries(estaciones).forEach(([nombre, datos]) => {
+
+        const coordenadas = coordenadasEstaciones[nombre];
+
+        // Si la estación no tiene coordenadas, no mostrarla
+        if (!coordenadas) {
+            console.warn("No hay coordenadas para la estación:", nombre);
+            return;
+        }
+
+        const cantidad = datos.bicis;
+        const estado = obtenerEstadoEstacion(cantidad);
+
+        // Crear marcador personalizado
+        const icono = L.divIcon({
+            className: "marcador-bici-wrapper",
+            html: `
+                <div class="marcador-bici-contenido ${estado.cardClase}">
+                    <span class="marcador-bici-icono">🚲</span>
+                    <span class="marcador-bici-cantidad">${cantidad}</span>
+                </div>
+            `,
+            iconSize: [70, 50],
+            iconAnchor: [35, 25],
+            popupAnchor: [0, -25]
+        });
+
+        const marcador = L.marker(coordenadas, {
+            icon: icono
+        }).addTo(mapaLeaflet);
+
+        marcador.bindPopup(`
+            <div class="text-center">
+                <strong>${nombre}</strong>
+                <hr class="my-2">
+                <div>🚲 ${cantidad} bicicletas disponibles</div>
+                <div>${estado.texto}</div>
+            </div>
+        `);
+
+        marcadoresEstaciones[nombre] = marcador;
+    });
+}
+
+
+// Coordenadas de referencia de las estaciones
+const coordenadasEstaciones = {
+    "Plaza Independencia": [-26.8304, -65.2038],
+    "Parque 9 de Julio": [-26.8245, -65.1878],
+    "Terminal": [-26.8295, -65.2008]
+};
+
+
+
+
+
 const distancias = {
     "Plaza Independencia": {
         "Parque 9 de Julio": 3.2,
@@ -365,41 +474,16 @@ function renderEstaciones() {
 
     const mapa = document.getElementById("mapa");
 
-    if(!mapa) return;
+    if (!mapa) return;
 
-    const nombres = Object.keys(estaciones);
+    // Inicializar el mapa si todavía no existe.
+    inicializarMapa();
 
-    if(nombres.length === 0){
-        mapa.innerHTML = `
-            <p class="text center text-muted">
-            No hay estaciones registradas.
-            </p> `
-            return;
-    }
+    if (!mapaLeaflet) return;
 
-    mapa.innerHTML = `
-        <div class="row text-center">
-            ${nombres.map(nombre => {
-                const cantidad = estaciones[nombre].bicis;
-                const estado = obtenerEstadoEstacion(cantidad);
-
-                return `
-                    <div class="col-md-4 mb-3">
-                        <div class="card shadow-sm card-estacion ${estado.cardClase}">
-                            <div class="card-body">
-                                <h5>📍 ${nombre}</h5>
-                                <p>🚲 ${cantidad} bicicletas</p>
-                                <p class="${estado.textoClase} fw-bold">
-                                    ${estado.texto}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join("")}
-        </div>
-    `;
-    }
+    // Actualizar los marcadores con los datos de Supabase.
+    actualizarMarcadoresMapa();
+}
 
 
 function actualizarSelectEstaciones() {
