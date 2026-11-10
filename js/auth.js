@@ -15,6 +15,63 @@ if (window.supabase && window.supabase.createClient) {
     );
 }
 
+
+
+
+// ============================================
+// RECUPERAR CONTRASEÑA
+// ============================================
+
+async function solicitarRecuperacionPassword() {
+
+    const email = document.getElementById("emailRecuperacion").value.trim();
+
+    if (!regexEmail.test(email)) {
+
+        mostrarModal(
+            "Correo inválido",
+            "Ingresá una dirección de correo electrónico válida.",
+            "warning"
+        );
+
+        return;
+    }
+
+    try {
+
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo: `${window.location.origin}/nueva-password.html`
+            }
+        );
+
+        if (error) throw error;
+
+        mostrarModal(
+            "Correo enviado",
+            "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Revisá también la carpeta de spam.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error("Error al solicitar recuperación:", error);
+
+        mostrarModal(
+            "Error",
+            error.message || "No se pudo enviar el correo de recuperación.",
+            "danger"
+        );
+
+    }
+}
+
+
+
+
+
+
 // ============================================
 // MODALES
 // ============================================
@@ -647,3 +704,81 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+
+
+// ============================================
+// ACTUALIZAR CONTRASEÑA
+// ============================================
+
+async function actualizarPassword() {
+
+    const nuevaPassword = document.getElementById("nuevaPassword").value;
+    const confirmarPassword = document.getElementById("confirmarPassword").value;
+
+    if (nuevaPassword.length < 6) {
+        mostrarModal(
+            "Contraseña inválida",
+            "La contraseña debe tener al menos 6 caracteres.",
+            "warning"
+        );
+        return;
+    }
+
+    if (nuevaPassword !== confirmarPassword) {
+        mostrarModal(
+            "Las contraseñas no coinciden",
+            "Verificá que ambas contraseñas sean iguales.",
+            "warning"
+        );
+        return;
+    }
+
+    try {
+        const { data, error: errorSesion } =
+            await supabaseClient.auth.getSession();
+
+        if (errorSesion) throw errorSesion;
+
+        if (!data.session) {
+            mostrarModal(
+                "Enlace inválido o vencido",
+                "Solicitá nuevamente la recuperación de contraseña.",
+                "warning"
+            );
+            return;
+        }
+
+        const { error } = await supabaseClient.auth.updateUser({
+            password: nuevaPassword
+        });
+
+        if (error) throw error;
+
+        const modal = mostrarModal(
+            "Contraseña actualizada",
+            "Tu contraseña se actualizó correctamente. Ahora podés iniciar sesión.",
+            "success"
+        );
+
+        if (modal) {
+            document.getElementById("messageModal").addEventListener(
+                "hidden.bs.modal",
+                async () => {
+                    await supabaseClient.auth.signOut();
+                    window.location.href = "login.html";
+                },
+                { once: true }
+            );
+        }
+
+    } catch (error) {
+        console.error("Error al actualizar contraseña:", error);
+
+        mostrarModal(
+            "Error",
+            error.message || "No se pudo actualizar la contraseña.",
+            "danger"
+        );
+    }
+}
