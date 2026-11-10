@@ -329,7 +329,7 @@ function actualizarMarcadoresMapa() {
 const coordenadasEstaciones = {
     "Plaza Independencia": [-26.8304, -65.2038],
     "Parque 9 de Julio": [-26.8245, -65.1878],
-    "Terminal": [-26.8295, -65.2008]
+    "Terminal": [-26.8295, -65.1920]
 };
 
 
