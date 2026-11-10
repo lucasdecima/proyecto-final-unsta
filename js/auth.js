@@ -459,37 +459,31 @@ async function login() {
             fechaRegistro: perfil?.fecha_registro || null
         };
 
-        const modal = mostrarModal(
-            "",
-            `👋 ¡Bienvenido, ${nombre}!`,
-            "success"
-        );
+        const welcomeName = document.getElementById("welcomeName");
 
-        const header = document.getElementById("messageHeader");
-        const footer = document.getElementById("messageFooter");
-        const closeButton = document.getElementById("messageClose");
+if (welcomeName) {
+    welcomeName.textContent = nombre;
+}
 
-        if (header) header.classList.add("d-none");
-        if (footer) footer.classList.add("d-none");
-        if (closeButton) closeButton.classList.add("d-none");
+const welcomeElement = document.getElementById("welcomeModal");
 
-        if (!modal) {
-            window.location.href = "index.html";
-            return;
-        }
+if (!welcomeElement) {
+    window.location.href = "index.html";
+    return;
+}
 
-        document
-            .getElementById("messageModal")
-            .addEventListener("hidden.bs.modal", () => {
-                if (header) header.classList.remove("d-none");
-                if (footer) footer.classList.remove("d-none");
-                if (closeButton) closeButton.classList.remove("d-none");
-                window.location.href = "index.html";
-            }, { once: true });
+const modal = bootstrap.Modal.getOrCreateInstance(welcomeElement);
 
-        setTimeout(() => {
-            modal.hide();
-        }, 2000);
+modal.show();
+
+welcomeElement.addEventListener("hidden.bs.modal", () => {
+    window.location.href = "index.html";
+}, { once: true });
+
+setTimeout(() => {
+    modal.hide();
+}, 3000);
+
 
     } catch (error) {
         console.error("Error durante el inicio de sesión:", error);
