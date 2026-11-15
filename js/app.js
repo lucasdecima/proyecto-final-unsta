@@ -52,7 +52,7 @@ function validarDatosTarjeta() {
 
     // Validar los 16 dígitos de la tarjeta.
     if (!/^\d{16}$/.test(numero)) {
-        return "El número de tarjeta debe contener exactamente 16 dígitos.";
+        return "El número de tarjeta debe contener 16 dígitos.";
     }
 
     // Validar formato MM/AA.
@@ -77,7 +77,7 @@ function validarDatosTarjeta() {
 
     // Validar código de seguridad.
     if (!/^\d{3}$/.test(codigo)) {
-        return "El código de seguridad debe contener exactamente 3 dígitos.";
+        return "El código de seguridad debe contener 3 dígitos.";
     }
 
     return null;
@@ -117,6 +117,17 @@ function validarDatosTarjetaPenalizaciones() {
     }
 
     return null;
+}
+
+
+function formatearVencimiento(input) {
+    let valor = input.value.replace(/\D/g, "");
+
+    if (valor.length > 2) {
+        valor = valor.substring(0, 2) + "/" + valor.substring(2, 4);
+    }
+
+    input.value = valor;
 }
 
 async function procesarPagoMembresia() {
@@ -1213,6 +1224,86 @@ async function pagarCargosPendientes() {
     );
 
     modal.show();
+}
+
+
+
+async function procesarPagoPenalizaciones() {
+
+    const boton = document.getElementById("btnConfirmarPagoPenalizaciones");
+    const mensajeError = document.getElementById("errorPagoPenalizaciones");
+
+    mensajeError.textContent = "";
+    mensajeError.classList.add("d-none");
+
+    // Validar los datos ingresados.
+    const errorValidacion = validarDatosTarjetaPenalizaciones();
+
+    if (errorValidacion) {
+        mensajeError.textContent = errorValidacion;
+        mensajeError.classList.remove("d-none");
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Procesando pago...";
+
+    try {
+
+        // Procesar el pago mediante la función de Supabase.
+        const { data, error } = await supabaseClient.rpc(
+            "procesar_pago_penalizaciones"
+        );
+
+        if (error) throw error;
+
+        const resultado = data[0];
+
+        console.log("Pago de penalizaciones registrado:", resultado);
+
+        // Cerrar el modal de pago.
+        const modalElemento = document.getElementById("penaltyPaymentModal");
+        const modal = bootstrap.Modal.getInstance(modalElemento);
+
+        if (modal) {
+            const modalCerrado = new Promise(resolve => {
+                modalElemento.addEventListener(
+                    "hidden.bs.modal",
+                    resolve,
+                    { once: true }
+                );
+            });
+
+            modal.hide();
+
+            await modalCerrado;
+        }
+
+        // Actualizar los cargos pendientes.
+        await cargarCargosPendientesDesdeSupabase();
+
+        // Mostrar confirmación.
+        mostrarModal(
+        "¡Pago aprobado!",
+        `Se pagaron ${resultado.cantidad_penalizaciones} penalizaciones por ${formatearImporte(resultado.importe_total)}.`,
+        "success"
+        );
+
+    } catch (error) {
+
+        console.error("Error al procesar el pago de penalizaciones:", error);
+
+        mensajeError.textContent =
+            error.message || "No se pudo procesar el pago. Intentá nuevamente.";
+
+        mensajeError.classList.remove("d-none");
+
+    } finally {
+
+        boton.disabled = false;
+        boton.textContent = "Confirmar pago";
+
+    }
 }
 
 
