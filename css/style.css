@@ -395,3 +395,38 @@ footer .text-center.p-3{
 .marcador-bici-contenido.estado-vacia {
     border-color: #dc3545;
 }
+
+
+
+
+/* Modal de alquiler confirmado */
+
+#successModal .success-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background-color: #dcfce7;
+    color: #15803d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: bold;
+    animation: aparecerExito 0.4s ease;
+}
+
+#successModal .success-info {
+    background-color: #f1f5f9;
+}
+
+@keyframes aparecerExito {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
