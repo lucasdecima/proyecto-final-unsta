@@ -334,7 +334,7 @@
                     </p>
 
                     <p>
-                        <strong>Tiempo disponible hoy: <span id="tiempoDisponibleHoy">4 horas</span></strong>
+                        <strong>Tiempo disponible hoy: <span id="tiempoDisponibleHoy">8 horas</span></strong>
                         
                     </p>
 
@@ -481,88 +481,85 @@
 
     <hr>
 
-    <h6 class="fw-bold mb-3">Seleccioná tu plan de alquiler</h6>
+    <h6 class="fw-bold mb-3">Seleccioná tu membresía</h6>
 
-    <div class="row g-3">
+<div class="row g-3">
 
-        <!-- PLAN POR KILÓMETRO -->
-        <div class="col-12 col-md-6">
-            <label class="card plan-card plan-plateado h-100" for="planPorKm">
-                <div class="card-body text-center p-4">
+    <!-- MEMBRESÍA QUINCENAL -->
+    <div class="col-12 col-md-6">
+        <label class="card plan-card plan-plateado h-100" for="planQuincenal">
+            <div class="card-body text-center p-4">
 
-                    <div class="plan-icon mb-2">🥈</div>
+                <div class="plan-icon mb-2">🥈</div>
 
-                    <h5 class="fw-bold">PLAN POR KILÓMETRO</h5>
+                <h5 class="fw-bold">MEMBRESÍA QUINCENAL</h5>
 
-                    <h2 class="fw-bold mb-0">$250</h2>
-                    <p class="text-muted mb-3">ARS por kilómetro</p>
+                <h2 class="fw-bold mb-0">$13.000</h2>
+                <p class="text-muted mb-3">ARS cada 15 días</p>
 
-                    <hr>
+                <hr>
 
-                    <p class="mb-2">Pagás según la distancia recorrida.</p>
+                <p class="mb-2">Cantidad ilimitada de viajes.</p>
+                <p class="text-muted small mb-3">
+                    Hasta 8 horas de uso por día.
+                </p>
 
-                    <p class="text-muted small mb-3">
-                        El pago se realiza al finalizar cada viaje.
-                    </p>
+                <div class="form-check d-flex justify-content-center">
+                    <input
+                        class="form-check-input me-2"
+                        type="radio"
+                        name="tipoPlan"
+                        id="planQuincenal"
+                        value="quincenal"
+                        onchange="seleccionarPlan('quincenal')">
 
-                    <div class="form-check d-flex justify-content-center">
-                        <input
-                            class="form-check-input me-2"
-                            type="radio"
-                            name="tipoPlan"
-                            id="planPorKm"
-                            value="por_km"
-                            checked
-                            onchange="seleccionarPlan('por_km')">
-
-                        <label class="form-check-label fw-semibold" for="planPorKm">
-                            Seleccionar plan
-                        </label>
-                    </div>
-
+                    <label class="form-check-label fw-semibold" for="planQuincenal">
+                        Seleccionar plan
+                    </label>
                 </div>
-            </label>
-        </div>
 
-        <!-- MEMBRESÍA MENSUAL -->
-        <div class="col-12 col-md-6">
-            <label class="card plan-card plan-dorado h-100" for="planMensual">
-                <div class="card-body text-center p-4">
-
-                    <div class="plan-icon mb-2">🥇</div>
-
-                    <h5 class="fw-bold">MEMBRESÍA MENSUAL</h5>
-
-                    <h2 class="fw-bold mb-0">$20.000</h2>
-                    <p class="text-muted mb-3">ARS cada 30 días</p>
-
-                    <hr>
-
-                    <p class="mb-2">Cantidad ilimitada de viajes.</p>
-
-                    <p class="text-muted small mb-3">
-                        Sin cargos adicionales por kilómetro.
-                    </p>
-
-                    <div class="form-check d-flex justify-content-center">
-                        <input
-                            class="form-check-input me-2"
-                            type="radio"
-                            name="tipoPlan"
-                            id="planMensual"
-                            value="mensual"
-                            onchange="seleccionarPlan('mensual')">
-
-                        <label class="form-check-label fw-semibold"     for="planMensual">
-                            Seleccionar plan
-                        </label>
-                    </div>
-
-                </div>
-            </label>
-        </div>
-
+            </div>
+        </label>
     </div>
+
+    <!-- MEMBRESÍA MENSUAL -->
+    <div class="col-12 col-md-6">
+        <label class="card plan-card plan-dorado h-100" for="planMensual">
+            <div class="card-body text-center p-4">
+
+                <div class="plan-icon mb-2">🥇</div>
+
+                <h5 class="fw-bold">MEMBRESÍA MENSUAL</h5>
+
+                <h2 class="fw-bold mb-0">$20.000</h2>
+                <p class="text-muted mb-3">ARS cada 30 días</p>
+
+                <hr>
+
+                <p class="mb-2">Cantidad ilimitada de viajes.</p>
+                <p class="text-muted small mb-3">
+                    Hasta 8 horas de uso por día.
+                </p>
+
+                <div class="form-check d-flex justify-content-center">
+                    <input
+                        class="form-check-input me-2"
+                        type="radio"
+                        name="tipoPlan"
+                        id="planMensual"
+                        value="mensual"
+                        onchange="seleccionarPlan('mensual')">
+
+                    <label class="form-check-label fw-semibold" for="planMensual">
+                        Seleccionar plan
+                    </label>
+                </div>
+
+            </div>
+        </label>
+    </div>
+
+</div>
 
         <div class="alert alert-secondary mt-3 mb-0">
             <small>
@@ -613,9 +610,9 @@
         <div class="modal-content">
 
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    💳 Pago de membresía mensual
-                </h5>
+            <h5 class="modal-title" id="tituloPagoMembresia">
+                💳 Pago de membresía
+            </h5>
 
                 <button type="button"
                         class="btn-close btn-close-white"
@@ -626,9 +623,12 @@
             <div class="modal-body">
 
                 <div class="text-center mb-4">
-                    <h3 class="text-success fw-bold">$20.000 ARS</h3>
-                    <p class="text-muted mb-0">
-                        Membresía mensual - 30 días
+                    <h3 class="text-success fw-bold" id="importeMembresiaModal">
+                        $0 ARS
+                    </h3>
+
+                    <p class="text-muted mb-0" id="detalleMembresiaModal">
+                    Seleccioná una membresía
                     </p>
                 </div>
 

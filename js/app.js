@@ -4,14 +4,42 @@
 
 let usuario = null;
 let trips = [];
-let tipoPlanSeleccionado = 'por_km';
+let tipoPlanSeleccionado = null;
 let cargosPendientes = [];
 
+const PLANES_MEMBRESIA = {
+    quincenal: {
+        nombre: "Membresía quincenal",
+        dias: 15,
+        importe: 13000
+    },
+    mensual: {
+        nombre: "Membresía mensual",
+        dias: 30,
+        importe: 20000
+    }
+};
 
 function seleccionarPlan(tipo) {
-    tipoPlanSeleccionado = tipo;
-}
 
+    if (!PLANES_MEMBRESIA[tipo]) {
+        tipoPlanSeleccionado = null;
+        return;
+    }
+
+    tipoPlanSeleccionado = tipo;
+
+    const plan = PLANES_MEMBRESIA[tipo];
+
+    document.getElementById("tituloPagoMembresia").textContent =
+        `💳 Pago de ${plan.nombre.toLowerCase()}`;
+
+    document.getElementById("importeMembresiaModal").textContent =
+        `${formatearImporte(plan.importe)} ARS`;
+
+    document.getElementById("detalleMembresiaModal").textContent =
+        `${plan.nombre} - ${plan.dias} días`;
+}
 //======================================================
 // MEMBRESÍAS
 //======================================================
@@ -20,7 +48,7 @@ async function consultarMembresiaActiva() {
 
     const { data, error } = await supabaseClient
         .from("suscripciones")
-        .select("id, fecha_inicio, fecha_fin, estado")
+        .select("id, tipo_plan, fecha_inicio, fecha_fin, estado")
         .eq("usuario_id", usuario.id)
         .eq("estado", "activa")
         .lte("fecha_inicio", new Date().toISOString())
@@ -130,13 +158,19 @@ function formatearVencimiento(input) {
     input.value = valor;
 }
 
-async function procesarPagoMembresia() {
 
+async function procesarPagoMembresia() {
     const boton = document.getElementById("btnPagar");
     const mensajeError = document.getElementById("errorPago");
 
     mensajeError.classList.add("d-none");
     mensajeError.textContent = "";
+
+    if (!tipoPlanSeleccionado || !PLANES_MEMBRESIA[tipoPlanSeleccionado]) {
+        mensajeError.textContent = "Seleccioná una membresía antes de continuar.";
+        mensajeError.classList.remove("d-none");
+        return;
+    }
 
     const errorValidacion = validarDatosTarjeta();
 
@@ -150,19 +184,22 @@ async function procesarPagoMembresia() {
     boton.textContent = "Procesando pago...";
 
     try {
-
-        // Registrar el pago y activar la membresía en Supabase.
         const { data, error } = await supabaseClient.rpc(
-            "procesar_pago_membresia_simulada"
+            "procesar_pago_membresia_simulada",
+            {
+                p_tipo_plan: tipoPlanSeleccionado
+            }
         );
 
         if (error) throw error;
 
-        console.log("Pago registrado:", data);
+        if (!data || !data.length) {
+            throw new Error("No se recibió la confirmación del pago.");
+        }
 
-        // Cerrar el formulario de pago.
-       const paymentModalElement = document.getElementById("paymentModal");
+        console.log("Pago de membresía registrado:", data);
 
+        const paymentModalElement = document.getElementById("paymentModal");
         const paymentModal = bootstrap.Modal.getInstance(paymentModalElement);
 
         if (paymentModal) {
@@ -173,36 +210,26 @@ async function procesarPagoMembresia() {
                     { once: true }
                 );
             });
-        
+
             paymentModal.hide();
-        
             await modalCerrado;
         }
 
-// Iniciar automáticamente el alquiler con el origen y destino seleccionados.
-const alquilerIniciado = await rentBike();
+        await actualizarTiempoDisponibleHoy();
 
-        if (!alquilerIniciado) {
-            throw new Error(
-                "El pago fue aprobado, pero no se pudo iniciar el alquiler. La membresía quedó registrada."
-            );
-        }
+        document.getElementById("numeroTarjeta").value = "";
+        document.getElementById("vencimientoTarjeta").value = "";
+        document.getElementById("codigoSeguridad").value = "";
 
-        // Mostrar la confirmación del pago
+        const plan = PLANES_MEMBRESIA[tipoPlanSeleccionado];
 
         mostrarModal(
-            "¡Transacción aprobada!",
-            "Tu pago fue aprobado correctamente.",
+            "¡Membresía activada!",
+            `Tu ${plan.nombre.toLowerCase()} fue registrada correctamente. Importe: ${formatearImporte(plan.importe)} ARS. Vigencia: ${plan.dias} días.`,
             "success"
         );
 
-        // Volver al inicio después de 5 segundos.
-        setTimeout(() => {
-            window.location.href = "index.html";
-        }, 5000);
-
     } catch (error) {
-
         console.error("Error al procesar el pago:", error);
 
         mensajeError.textContent =
@@ -211,12 +238,11 @@ const alquilerIniciado = await rentBike();
         mensajeError.classList.remove("d-none");
 
     } finally {
-
         boton.disabled = false;
         boton.textContent = "Pagar";
-
     }
 }
+
 
 
 
@@ -227,8 +253,7 @@ const alquilerIniciado = await rentBike();
 
 const MAX_TIEMPO_VIAJE = 60 * 60 * 1000; // 1 hora por viaje
 
-const MAX_TIEMPO_DIARIO_BASICO = 4 * 60 * 60; // 4 horas en segundos
-const MAX_TIEMPO_DIARIO_MENSUAL = 8 * 60 * 60; // 8 horas en segundos
+const MAX_TIEMPO_DIARIO = 8 * 60 * 60; // 8 horas en segundos
 
 let claveViajeActivo = null;
 let viajeActivo = null;
@@ -574,58 +599,12 @@ async function rentBike() {
     }
 
 
-        // Verificar el tiempo disponible del usuario para hoy.
-    try {
-        const tiempoDisponible = await actualizarTiempoDisponibleHoy();
 
-        if (tiempoDisponible <= 0) {
-    const membresia = await consultarMembresiaActiva();
-
-    const limite = membresia ? "8 horas" : "4 horas";
-
-    mostrarModal(
-        "Límite diario alcanzado",
-        `Alcanzaste el límite máximo de ${limite} de alquiler por día correspondiente a tu plan. Podrás volver a alquilar mañana.`,
-        "warning"
-    );
-
-    return false;
-    }
-
-    } catch (error) {
-        console.error("Error al verificar el tiempo disponible:", error);
-        alert("No se pudo verificar el tiempo disponible. Intentá nuevamente.");
-        return false;
-    }
-
-
-
-    const origen = document.getElementById("origen").value;
-    const destino = document.getElementById("destino").value;
-    const boton = document.getElementById("btnAlquilar");
-
-    // Verificar membresía si seleccionó el plan mensual.
-if (tipoPlanSeleccionado === "mensual") {
+    // Verificar si el usuario tiene una membresía activa.
+    let membresia;
 
     try {
-        const membresia = await consultarMembresiaActiva();
-
-        if (!membresia) {
-
-        const paymentModal = new bootstrap.Modal(
-        document.getElementById("paymentModal")
-        );
-
-        paymentModal.show();
-
-        return false;
-
-        }
-
-        console.log(
-            "Membresía activa hasta:",
-            new Date(membresia.fecha_fin).toLocaleDateString("es-AR")
-        );
+        membresia = await consultarMembresiaActiva();
 
     } catch (error) {
         console.error("Error al consultar la membresía:", error);
@@ -635,9 +614,100 @@ if (tipoPlanSeleccionado === "mensual") {
             "No pudimos verificar tu membresía. Intentá nuevamente.",
             "danger"
         );
-        return false; 
+
+        return false;
     }
-}
+
+    // Si no tiene membresía, debe comprar una antes de alquilar.
+    if (!membresia) {
+
+        if (!tipoPlanSeleccionado ||
+            !PLANES_MEMBRESIA[tipoPlanSeleccionado]) {
+
+            mostrarModal(
+                "Seleccioná una membresía",
+                "Para alquilar una bicicleta necesitás una membresía activa. Elegí el plan quincenal o mensual para continuar.",
+                "warning"
+            );
+
+            return false;
+        }
+
+        // Actualizar los datos del modal de pago.
+        seleccionarPlan(tipoPlanSeleccionado);
+
+        // Cerrar el modal de alquiler antes de abrir el de pago.
+        const rentModalElement =
+            document.getElementById("rentBikeModal");
+
+        const rentModal =
+            bootstrap.Modal.getInstance(rentModalElement);
+
+        if (rentModal) {
+            const modalCerrado = new Promise(resolve => {
+                rentModalElement.addEventListener(
+                    "hidden.bs.modal",
+                    resolve,
+                    { once: true }
+                );
+            });
+
+            rentModal.hide();
+            await modalCerrado;
+        }
+
+        // Abrir el modal de pago de membresía.
+        const paymentModal = bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("paymentModal")
+        );
+
+        paymentModal.show();
+
+        return false;
+    }
+
+    console.log(
+        "Membresía activa:",
+        membresia.tipo_plan,
+        "Vigente hasta:",
+        new Date(membresia.fecha_fin).toLocaleDateString("es-AR")
+    );
+
+    // Verificar el tiempo disponible del usuario para hoy.
+    try {
+        const tiempoDisponible =
+            await actualizarTiempoDisponibleHoy();
+
+        if (tiempoDisponible <= 0) {
+
+            mostrarModal(
+                "Límite diario alcanzado",
+                "Alcanzaste el límite máximo de 8 horas de alquiler por día. Podrás volver a alquilar mañana.",
+                "warning"
+            );
+
+            return false;
+        }
+
+    } catch (error) {
+        console.error(
+            "Error al verificar el tiempo disponible:",
+            error
+        );
+
+        mostrarModal(
+            "Error al verificar el tiempo disponible",
+            "No pudimos consultar tu tiempo de alquiler. Intentá nuevamente.",
+            "danger"
+        );
+
+        return false;
+    }
+
+    const origen = document.getElementById("origen").value;
+    const destino = document.getElementById("destino").value;
+    const boton = document.getElementById("btnAlquilar");
+
 
 
     if (origen === destino) {
@@ -1307,12 +1377,8 @@ async function procesarPagoPenalizaciones() {
 }
 
 
-
-
-
-
-
 async function actualizarTiempoDisponibleHoy() {
+
     const ahora = new Date();
 
     // Obtener el inicio y el final del día actual.
@@ -1328,7 +1394,7 @@ async function actualizarTiempoDisponibleHoy() {
         ahora.getDate() + 1
     );
 
-    // Consultar los viajes del usuario iniciados hoy.
+    // Consultar los viajes iniciados hoy.
     const { data: viajesHoy, error } = await supabaseClient
         .from("viajes")
         .select("inicio, fin, duracion_segundos, estado")
@@ -1342,31 +1408,62 @@ async function actualizarTiempoDisponibleHoy() {
     let tiempoUtilizado = 0;
 
     viajesHoy.forEach(viaje => {
+
         if (viaje.estado === "finalizado") {
-            tiempoUtilizado += Number(viaje.duracion_segundos) || 0;
+
+            tiempoUtilizado +=
+                Number(viaje.duracion_segundos) || 0;
+
         } else if (viaje.estado === "en_curso") {
+
             tiempoUtilizado += Math.floor(
                 (ahora.getTime() - new Date(viaje.inicio).getTime()) / 1000
             );
+
         }
+
     });
 
-    // Determinar el límite diario según la membresía activa.
+    // Consultar la membresía activa.
     const membresia = await consultarMembresiaActiva();
 
+    // Ambas membresías tienen el mismo límite diario.
     const limiteDiario = membresia
-    ? MAX_TIEMPO_DIARIO_MENSUAL
-    : MAX_TIEMPO_DIARIO_BASICO;    
-    const tiempoRestante = Math.max(0, limiteDiario - tiempoUtilizado);
+        ? MAX_TIEMPO_DIARIO
+        : 0;
+
+    const tiempoRestante = Math.max(
+        0,
+        limiteDiario - tiempoUtilizado
+    );
 
     const horas = Math.floor(tiempoRestante / 3600);
-    const minutos = Math.floor((tiempoRestante % 3600) / 60);
 
-    document.getElementById("tiempoDisponibleHoy").textContent =
-        `${horas} h ${minutos} min`;
+    const minutos = Math.floor(
+        (tiempoRestante % 3600) / 60
+    );
+
+    const elementoTiempo =
+        document.getElementById("tiempoDisponibleHoy");
+
+    if (!membresia) {
+
+        elementoTiempo.textContent =
+            "Requiere membresía activa";
+
+    } else {
+
+        elementoTiempo.textContent =
+            `${horas} h ${minutos} min`;
+
+    }
 
     return tiempoRestante;
 }
+
+
+
+
 
 function iniciarActualizacionTiempoDisponible() {
 
