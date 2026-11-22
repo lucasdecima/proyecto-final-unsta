@@ -6,6 +6,8 @@ let usuario = null;
 let trips = [];
 let tipoPlanSeleccionado = null;
 let cargosPendientes = [];
+let intentosVerificacionUbicacion = 0;
+let ubicacionVerificada = false;
 
 const PLANES_MEMBRESIA = {
     quincenal: {
@@ -63,6 +65,169 @@ async function consultarMembresiaActiva() {
 
     return data;
 }
+
+
+async function actualizarVistaMembresiaAlquiler() {
+    const estadoMembresia = document.getElementById("estadoMembresiaAlquiler");
+    const flujoAlquiler = document.getElementById("contenedorFlujoAlquiler");
+    const planesMembresia = document.getElementById("contenedorPlanesMembresia");
+    const btnAlquilar = document.getElementById("btnAlquilar");
+
+    try {
+        estadoMembresia.textContent = "Consultando tu membresía...";
+        estadoMembresia.className = "alert alert-info";
+
+        flujoAlquiler.classList.add("d-none");
+        planesMembresia.classList.add("d-none");
+        btnAlquilar.disabled = true;
+
+        const membresia = await consultarMembresiaActiva();
+
+        if (membresia) {
+            const plan = PLANES_MEMBRESIA[membresia.tipo_plan];
+
+            estadoMembresia.textContent =
+                `Tenés una ${plan?.nombre || "membresía activa"}. ` +
+                `Vigente hasta el ${new Date(membresia.fecha_fin).toLocaleDateString("es-AR")}.`;
+
+            estadoMembresia.className = "alert alert-success";
+
+            flujoAlquiler.classList.remove("d-none");
+            planesMembresia.classList.add("d-none");
+
+        } else {
+            estadoMembresia.textContent =
+                "No tenés una membresía activa. Elegí un plan para comenzar a alquilar.";
+
+            estadoMembresia.className = "alert alert-warning";
+
+            flujoAlquiler.classList.add("d-none");
+            planesMembresia.classList.remove("d-none");
+        }
+
+    } catch (error) {
+        console.error("Error al consultar la membresía:", error);
+
+        estadoMembresia.textContent =
+            "No pudimos consultar tu membresía. Intentá nuevamente.";
+
+        estadoMembresia.className = "alert alert-danger";
+
+        flujoAlquiler.classList.add("d-none");
+        planesMembresia.classList.add("d-none");
+        btnAlquilar.disabled = true;
+    }
+}
+
+
+function verificarUbicacion() {
+
+    const estado = document.getElementById("estadoGeolocalizacion");
+    const boton = document.getElementById("btnGeolocalizacion");
+
+    const origen = document.getElementById("origen").value;
+
+    // Validar que se haya seleccionado una estación.
+    if (!origen) {
+        estado.textContent =
+            "Primero seleccioná una estación de origen.";
+
+        estado.className = "alert alert-warning mt-2 mb-0";
+        return;
+    }
+
+    // Obtener las coordenadas de la estación seleccionada.
+    const coordenadas = coordenadasEstaciones[origen];
+
+    if (!coordenadas) {
+        estado.textContent =
+            "No encontramos las coordenadas de esta estación. Intentá nuevamente.";
+
+        estado.className = "alert alert-danger mt-2 mb-0";
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Verificando ubicación...";
+
+    estado.textContent =
+        "Comprobando tu proximidad a la estación...";
+
+    estado.className = "alert alert-info mt-2 mb-0";
+
+    // Contar el intento de verificación.
+    intentosVerificacionUbicacion++;
+
+    const intento = intentosVerificacionUbicacion;
+
+    // Simular la ubicación del usuario en la estación seleccionada.
+    const ubicacionSimulada = {
+        latitud: coordenadas[0],
+        longitud: coordenadas[1]
+    };
+
+    console.log("Verificación de ubicación:", {
+        intento: intento,
+        estacion: origen,
+        latitud: ubicacionSimulada.latitud,
+        longitud: ubicacionSimulada.longitud
+    });
+
+    // Generar resultado aleatorio.
+    const probabilidadFallo = Math.random();
+
+    // Cada 4 intentos: posibilidad de advertencia.
+    if (intento % 4 === 0 && probabilidadFallo < 0.75) {
+
+        ubicacionVerificada = false;
+
+        estado.textContent =
+            "⚠️ No pudimos confirmar tu ubicación con precisión. Volvé a intentar la verificación.";
+
+        estado.className = "alert alert-warning mt-2 mb-0";
+
+        console.log("Advertencia simulada en el intento:", intento);
+
+    }
+
+    // Cada 2 intentos, excepto los múltiplos de 4: posibilidad de error.
+    else if (
+        intento % 2 === 0 &&
+        intento % 4 !== 0 &&
+        probabilidadFallo < 0.75
+    ) {
+
+        ubicacionVerificada = false;
+
+        estado.textContent =
+            "❌ No pudimos verificar tu ubicación. Parece que no estás cerca de una estación. Intentá nuevamente.";
+
+        estado.className = "alert alert-danger mt-2 mb-0";
+
+        console.log("Error simulado en el intento:", intento);
+
+    }
+
+    // Si no se activa ningún fallo, la verificación es exitosa.
+    else {
+
+        ubicacionVerificada = true;
+
+        estado.textContent =
+            "¡Ubicación verificada correctamente! Ya podés continuar.";
+
+        estado.className = "alert alert-success mt-2 mb-0";
+
+        console.log("Verificación exitosa en el intento:", intento);
+    }
+
+    boton.disabled = false;
+
+    boton.textContent = ubicacionVerificada
+        ? "📍 Ubicación verificada"
+        : "📍 Reintentar verificación";
+}
+
 
 
 //======================================================
@@ -361,12 +526,8 @@ function actualizarMarcadoresMapa() {
 }
 
 
-// Coordenadas de referencia de las estaciones
-const coordenadasEstaciones = {
-    "Plaza Independencia": [-26.8304, -65.2038],
-    "Parque 9 de Julio": [-26.8245, -65.1878],
-    "Terminal": [-26.8295, -65.1920]
-};
+// Coordenadas de las estaciones cargadas desde Supabase
+let coordenadasEstaciones = {};
 
 
 
@@ -414,20 +575,27 @@ function showSection(sectionId) {
 // MAPA Y ESTACIONES
 //======================================================
 
+
 async function cargarEstacionesDesdeSupabase() {
+
     if (!supabaseClient) {
         throw new Error("El cliente de Supabase no está inicializado.");
     }
 
-    const { data, error } = await supabaseClient
-        .from("estaciones")
-        .select("id, nombre");
+    // Consultar las estaciones activas.
+    const { data: estacionesDB, error: errorEstaciones } =
+        await supabaseClient
+            .from("estaciones")
+            .select("id, nombre, latitud, longitud, capacidad_maxima, activa")
+            .eq("activa", true)
+            .order("id");
 
-    if (error) {
-        throw error;
+    if (errorEstaciones) {
+        throw errorEstaciones;
     }
 
-    const { data: bicicletas, error: errorBicicletas } =
+    // Consultar las bicicletas.
+    const { data: bicicletasDB, error: errorBicicletas } =
         await supabaseClient
             .from("bicicletas")
             .select("id, codigo, estacion_id, estado");
@@ -437,24 +605,63 @@ async function cargarEstacionesDesdeSupabase() {
     }
 
     const estacionesActualizadas = {};
+    const coordenadasActualizadas = {};
 
-    data.forEach(estacion => {
-        const disponibles = bicicletas.filter(
-            bicicleta =>
-                bicicleta.estacion_id === estacion.id &&
-                bicicleta.estado === "disponible"
-        ).length;
+    // Preparar las estaciones.
+    estacionesDB.forEach(estacion => {
 
         estacionesActualizadas[estacion.nombre] = {
             id: estacion.id,
-            bicis: disponibles
+            bicis: 0,
+            capacidad: estacion.capacidad_maxima,
+            latitud: Number(estacion.latitud),
+            longitud: Number(estacion.longitud),
+            bicicletas: []
         };
+
+        coordenadasActualizadas[estacion.nombre] = [
+            Number(estacion.latitud),
+            Number(estacion.longitud)
+        ];
     });
 
+    // Asociar las bicicletas disponibles a sus estaciones.
+    bicicletasDB.forEach(bicicleta => {
+
+        if (bicicleta.estado !== "disponible" ||
+            bicicleta.estacion_id === null) {
+            return;
+        }
+
+        const estacion = estacionesDB.find(
+            item => String(item.id) === String(bicicleta.estacion_id)
+        );
+
+        if (!estacion) {
+            return;
+        }
+
+        const estacionActual =
+            estacionesActualizadas[estacion.nombre];
+
+        estacionActual.bicicletas.push({
+            id: bicicleta.id,
+            codigo: bicicleta.codigo
+        });
+
+        estacionActual.bicis =
+            estacionActual.bicicletas.length;
+    });
+
+    // Actualizar los datos globales.
     estaciones = estacionesActualizadas;
+    coordenadasEstaciones = coordenadasActualizadas;
+
+    console.log("Estaciones cargadas:", estaciones);
 
     return estaciones;
 }
+
 
 
 
@@ -522,34 +729,35 @@ function renderEstaciones() {
 }
 
 
+
+
 function actualizarSelectEstaciones() {
 
-    const origen =
-        document.getElementById("origen");
+    const origen = document.getElementById("origen");
 
-    const destino =
-        document.getElementById("destino");
-
-    origen.innerHTML = "";
-    destino.innerHTML = "";
-
-    for (const nombre in estaciones) {
-
-        origen.innerHTML += `
-            <option value="${nombre}">
-                ${nombre} (${estaciones[nombre].bicis} disponibles)
-            </option>
-        `;
-
-        destino.innerHTML += `
-            <option value="${nombre}">
-                ${nombre} (${estaciones[nombre].bicis} disponibles)
-            </option>
-        `;
+    if (!origen) {
+        return;
     }
 
-}
+    origen.innerHTML = `
+        <option value="">Seleccioná una estación</option>
+    `;
 
+    Object.entries(estaciones).forEach(([nombre, datos]) => {
+
+        const opcion = document.createElement("option");
+
+        opcion.value = nombre;
+
+        opcion.textContent =
+            `${nombre} (${datos.bicis} disponibles)`;
+
+        opcion.disabled = datos.bicis === 0;
+
+        origen.appendChild(opcion);
+    });
+
+}
 
 
 function actualizarDistancia() {
@@ -1679,6 +1887,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     viajeActivo = null;
 
 
+    // Actualizar el estado de membresía al abrir el modal.
+    const rentBikeModal = document.getElementById("rentBikeModal");
+
+    rentBikeModal.addEventListener("show.bs.modal", () => {
+        actualizarVistaMembresiaAlquiler();
+    });
+
 
     // Mostrar los datos del perfil.
     document.getElementById("nombreUsuario").textContent =
@@ -1694,17 +1909,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         usuario.fechaRegistro || "-";
 
     // Eventos de alquiler.
-    document
-        .getElementById("origen")
-        .addEventListener("change", actualizarDistancia);
-
-    document
-        .getElementById("destino")
-        .addEventListener("change", actualizarDistancia);
-
-    document
-        .getElementById("rentBikeModal")
-        .addEventListener("shown.bs.modal", actualizarDistancia);
+    // La estación de origen se cargará dinámicamente desde Supabase.
 
     
     try {
@@ -1737,6 +1942,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     document
         .getElementById("ordenViajes")
         .addEventListener("change", ordenarViajes);
+
+    document
+    .getElementById("btnGeolocalizacion")
+    .addEventListener("click", verificarUbicacion); 
+    
+    
+    document.getElementById("origen").addEventListener("change", () => {
+
+    ubicacionVerificada = false;
+
+    const estado = document.getElementById("estadoGeolocalizacion");
+    const boton = document.getElementById("btnGeolocalizacion");
+
+    estado.textContent =
+        "Necesitamos verificar tu ubicación para continuar.";
+
+    estado.className = "alert alert-info mt-2 mb-0";
+
+    boton.disabled = false;
+    boton.textContent = "📍 Verificar mi ubicación";
+    });
 
     // Renderizado de la aplicación.
     renderTrips();

@@ -419,6 +419,16 @@
 
             <div class="modal-body">
 
+            <!-- ESTADO DE MEMBRESÍA -->
+            <div
+                id="estadoMembresiaAlquiler"
+                class="alert alert-info"
+                role="alert">
+                Consultando tu membresía...
+            </div>
+
+            <!-- FLUJO DE ALQUILER -->
+            <div id="contenedorFlujoAlquiler">
                 
                 
 <!-- ESTACIÓN DE ORIGEN -->
@@ -512,9 +522,9 @@
         </small>
 
         </div>
+        </div>
 
-
-
+<div id="contenedorPlanesMembresia">
     <hr>
 
     <h6 class="fw-bold mb-3">Seleccioná tu membresía</h6>
@@ -603,7 +613,7 @@
                 académicos. No se realizan cobros reales.
             </small>
         </div>
-
+</div>
 
 </div>
 
@@ -621,7 +631,8 @@
                 <button
                     id="btnAlquilar"
                     class="btn btn-success"
-                    onclick="rentBike()">
+                    onclick="rentBike()"
+                    disabled>
 
                     Confirmar Alquiler
 
