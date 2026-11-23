@@ -51,10 +51,14 @@ function iconoBicicleta(clase = "") {
     `;
 }
 
+
 function seleccionarPlan(tipo) {
+
+    const botonContinuar = document.getElementById("btnContinuarPaso");
 
     if (!PLANES_MEMBRESIA[tipo]) {
         tipoPlanSeleccionado = null;
+        botonContinuar.disabled = true;
         return;
     }
 
@@ -70,7 +74,11 @@ function seleccionarPlan(tipo) {
 
     document.getElementById("detalleMembresiaModal").textContent =
         `${plan.nombre} - ${plan.dias} días`;
+
+    // Habilitar Continuar porque ya se seleccionó un plan.
+    botonContinuar.disabled = false;
 }
+
 //======================================================
 // MEMBRESÍAS
 //======================================================
@@ -111,6 +119,7 @@ async function actualizarVistaMembresiaAlquiler() {
         btnAlquilar.disabled = true;
 
         const membresia = await consultarMembresiaActiva();
+        console.log("Membresía recibida por la interfaz:", membresia);
 
         if (membresia) {
             const plan = PLANES_MEMBRESIA[membresia.tipo_plan];
@@ -723,19 +732,40 @@ async function procesarPagoMembresia() {
             await modalCerrado;
         }
 
-        await actualizarTiempoDisponibleHoy();
+        // 1. Guardar los datos del plan contratado.
+const plan = PLANES_MEMBRESIA[tipoPlanSeleccionado];
 
-        document.getElementById("numeroTarjeta").value = "";
-        document.getElementById("vencimientoTarjeta").value = "";
-        document.getElementById("codigoSeguridad").value = "";
+// 2. Limpiar los datos de la tarjeta.
+document.getElementById("numeroTarjeta").value = "";
+document.getElementById("vencimientoTarjeta").value = "";
+document.getElementById("codigoSeguridad").value = "";
 
-        const plan = PLANES_MEMBRESIA[tipoPlanSeleccionado];
+// 3. Actualizar el tiempo disponible.
+// Si falla esta consulta, no debemos considerar fallido el pago.
+try {
+    await actualizarTiempoDisponibleHoy();
+} catch (error) {
+    console.error("Error al actualizar el tiempo disponible:", error);
+}
 
-        mostrarModal(
-            "¡Membresía activada!",
-            `Tu ${plan.nombre.toLowerCase()} fue registrada correctamente. Importe: ${formatearImporte(plan.importe)} ARS. Vigencia: ${plan.dias} días.`,
-            "success"
-        );
+// 4. Consultar nuevamente la membresía y habilitar el alquiler.
+await actualizarVistaMembresiaAlquiler();
+
+// 5. Preparar el primer paso del alquiler.
+ubicacionVerificada = false;
+pasoAlquilerActual = 1;
+
+mostrarPasoAlquiler(1);
+
+// 6. Limpiar el plan seleccionado.
+tipoPlanSeleccionado = null;
+
+// 7. Mostrar la confirmación del pago.
+mostrarModal(
+    "¡Membresía activada!",
+    `Tu ${plan.nombre.toLowerCase()} fue registrada correctamente. Importe: ${formatearImporte(plan.importe)} ARS. Vigencia: ${plan.dias} días. Ya podés comenzar a alquilar una bicicleta.`,
+    "success"
+);
 
     } catch (error) {
         console.error("Error al procesar el pago:", error);
@@ -1817,7 +1847,9 @@ function mostrarViajeActivo() {
 
     Object.entries(estaciones).forEach(([nombre, estacion]) => {
         selector.innerHTML += `
-            <option value="${estacion.id}">${nombre}</option>
+            <option value="${estacion.id}">
+                ${nombre}
+            </option>
         `;
     });
 
@@ -1916,10 +1948,14 @@ async function finalizarViaje() {
     `;
 
     try {
+
+        // Guardamos el ID del viaje antes de limpiar viajeActivo.
+        const viajeId = viajeActivo.id;
+
         const { data, error } = await supabaseClient.rpc(
             "finalizar_alquiler",
             {
-                p_viaje_id: viajeActivo.id,
+                p_viaje_id: viajeId,
                 p_estacion_devolucion_id: estacionId
             }
         );
@@ -1946,9 +1982,40 @@ async function finalizarViaje() {
 
         mostrarModal(
             "¡Devolución exitosa!",
+
+            
             `La bicicleta fue devuelta correctamente. Distancia recorrida: ${resultado.km} km.`,
             "success"
         );
+
+        // Actualizar las encuestas generadas al finalizar el viaje.
+        try {
+
+            const { data: encuestas, error } = await supabaseClient
+            .from("encuestas_satisfaccion")
+            .select("id")
+            .eq("viaje_id", viajeId)
+            .eq("usuario_id", usuario.id)
+            .eq("estado", "pendiente")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        await cargarEncuestasPendientesDesdeSupabase();
+
+        // Invitar a responder la encuesta del viaje recién finalizado.
+        if (encuestas) {
+        invitarAResponderEncuesta(encuestas.id);
+        }
+
+        }catch (error) {
+
+        console.error(
+        "Error al actualizar las encuestas pendientes:",
+        error
+        );
+
+    }
 
     } catch (error) {
         console.error("Error al finalizar el viaje:", error);
@@ -1965,6 +2032,230 @@ async function finalizarViaje() {
         `${iconoBicicleta("me-2")} Finalizar viaje`;
     }
 }
+
+
+
+//======================================================
+// ENCUESTAS DE SATISFACCIÓN
+//======================================================
+
+async function cargarEncuestasPendientesDesdeSupabase() {
+
+    const { data, error } = await supabaseClient
+        .from("encuestas_satisfaccion")
+        .select("id, viaje_id, fecha_creacion, estado")
+        .eq("usuario_id", usuario.id)
+        .eq("estado", "pendiente")
+        .order("fecha_creacion", { ascending: false });
+
+    if (error) {
+        throw error;
+    }
+
+    console.log("Resultado de consulta de membresía:", {
+        usuarioId: usuario?.id,
+        membresiaEncontrada: data,
+        fechaActual: new Date().toISOString()
+    });
+
+    mostrarEncuestasPendientes(data || []);
+}
+
+
+function mostrarEncuestasPendientes(encuestas) {
+
+    const lista = document.getElementById("listaEncuestasPendientes");
+    const cantidad = document.getElementById("cantidadEncuestasPendientes");
+
+    if (!lista || !cantidad) {
+        console.error("No se encontraron los elementos HTML de encuestas.");
+        return;
+    }
+
+    // Actualizar el contador de encuestas pendientes.
+    cantidad.textContent = encuestas.length;
+
+    // Mostrar un mensaje si no hay encuestas pendientes.
+    if (encuestas.length === 0) {
+
+        lista.innerHTML = `
+            <p class="text-muted mb-0">
+                No tenés encuestas pendientes. ¡Gracias por utilizar P&L BIKE!
+            </p>
+        `;
+
+        return;
+    }
+
+    // Mostrar cada encuesta pendiente.
+    lista.innerHTML = encuestas.map(encuesta => {
+
+        const fecha = new Date(encuesta.fecha_creacion)
+            .toLocaleDateString("es-AR");
+
+        return `
+            <div class="border rounded p-3 mb-3">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                    <div>
+                        <strong>Encuesta del viaje #${encuesta.viaje_id}</strong>
+
+                        <div class="text-muted small">
+                            Fecha: ${fecha}
+                        </div>
+
+                        <span class="badge bg-warning text-dark mt-2">
+                            Pendiente
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-success btn-sm"
+                        onclick="abrirEncuesta(${encuesta.id})"
+                    >
+                        <i class="bi bi-star me-1"></i>
+                        Responder encuesta
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+function abrirEncuesta(encuestaId) {
+
+    // Guardar el ID de la encuesta seleccionada.
+    document.getElementById("encuestaId").value = encuestaId;
+
+    // Limpiar las respuestas anteriores.
+    document.getElementById("calificacionGeneral").value = "";
+    document.getElementById("estadoBicicleta").value = "";
+    document.getElementById("experienciaEstacion").value = "";
+    document.getElementById("comentarioEncuesta").value = "";
+
+    // Limpiar mensajes de error anteriores.
+    const error = document.getElementById("errorEncuesta");
+
+    error.textContent = "";
+    error.classList.add("d-none");
+
+    // Restablecer el botón.
+    const boton = document.getElementById("btnGuardarEncuesta");
+
+    boton.disabled = false;
+    boton.textContent = "Enviar encuesta";
+
+    // Abrir el modal de respuesta.
+    const modal = bootstrap.Modal.getOrCreateInstance(
+        document.getElementById("encuestaRespuestaModal")
+    );
+
+    modal.show();
+}
+
+function invitarAResponderEncuesta(encuestaId) {
+
+    const responder = confirm(
+        "¡Gracias por utilizar P&L BIKE!\n\n" +
+        "Tu opinión nos ayuda a mejorar el servicio.\n\n" +
+        "¿Querés responder ahora la encuesta de satisfacción?"
+    );
+
+    if (responder) {
+        abrirEncuesta(encuestaId);
+    }
+}
+
+async function guardarRespuestaEncuesta() {
+
+    const encuestaId = document.getElementById("encuestaId").value;
+    const calificacionGeneral = document.getElementById("calificacionGeneral").value;
+    const estadoBicicleta = document.getElementById("estadoBicicleta").value;
+    const experienciaEstacion = document.getElementById("experienciaEstacion").value;
+    const comentario = document.getElementById("comentarioEncuesta").value.trim();
+
+    const errorEncuesta = document.getElementById("errorEncuesta");
+    const btnGuardar = document.getElementById("btnGuardarEncuesta");
+
+    errorEncuesta.classList.add("d-none");
+    errorEncuesta.textContent = "";
+
+    // Validar campos obligatorios.
+    if (
+        !encuestaId ||
+        !calificacionGeneral ||
+        !estadoBicicleta ||
+        !experienciaEstacion
+    ) {
+        errorEncuesta.textContent = "Completá las tres calificaciones antes de continuar.";
+        errorEncuesta.classList.remove("d-none");
+        return;
+    }
+
+    if (comentario.length > 1000) {
+        errorEncuesta.textContent = "El comentario no puede superar los 1000 caracteres.";
+        errorEncuesta.classList.remove("d-none");
+        return;
+    }
+
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = "Guardando...";
+
+    try {
+
+        const { error } = await supabaseClient.rpc("responder_encuesta", {
+            p_encuesta_id: Number(encuestaId),
+            p_calificacion_general: Number(calificacionGeneral),
+            p_estado_bicicleta: Number(estadoBicicleta),
+            p_experiencia_estacion: Number(experienciaEstacion),
+            p_comentario: comentario || null
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        // Cerrar el modal.
+        const modalElemento = document.getElementById("encuestaRespuestaModal");
+        const modal = bootstrap.Modal.getInstance(modalElemento);
+
+        if (modal) {
+            modal.hide();
+        }
+
+        // Actualizar la lista de encuestas pendientes.
+        await cargarEncuestasPendientesDesdeSupabase();
+
+        // Informar que la respuesta se guardó correctamente.
+        const mensaje = document.getElementById("mensajeEncuestas");
+        mensaje.textContent = "¡Gracias por compartir tu opinión!";
+        mensaje.classList.remove("d-none", "alert-danger");
+        mensaje.classList.add("alert-success");
+
+    } catch (error) {
+
+        console.error("Error al guardar la encuesta:", error);
+
+        errorEncuesta.textContent =
+            error.message || "No se pudo guardar la encuesta. Intentá nuevamente.";
+
+        errorEncuesta.classList.remove("d-none");
+
+    } finally {
+
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Enviar respuesta";
+
+    }
+}
+
+
 
 //======================================================
 // PERFIL Y ESTADÍSTICAS
@@ -2587,15 +2878,43 @@ document.addEventListener("DOMContentLoaded", async () => {
             timeZone: "America/Argentina/Buenos_Aires"
         })
         : "-";
-        
+
     // Eventos de alquiler.
     // La estación de origen se cargará dinámicamente desde Supabase.
 
-    
     // Navegación entre los pasos del alquiler.
-    document
-        .getElementById("btnContinuarPaso")
-        .addEventListener("click", avanzarPasoAlquiler);
+    
+document
+.getElementById("btnContinuarPaso")
+.addEventListener("click", () => {
+
+    const planesMembresia = document.getElementById("contenedorPlanesMembresia");
+    const planesVisibles = !planesMembresia.classList.contains("d-none");
+
+    // Si se están mostrando los planes, continuar hacia el pago.
+    if (planesVisibles) {
+
+        if (!tipoPlanSeleccionado) {
+            mostrarModal(
+                "Seleccioná una membresía",
+                "Elegí un plan quincenal o mensual para continuar.",
+                "warning"
+            );
+            return;
+        }
+
+        const paymentModal = bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("paymentModal")
+        );
+
+        paymentModal.show();
+        return;
+    }
+
+    // Si hay una membresía activa, continuar con el alquiler.
+    avanzarPasoAlquiler();
+});
+
 
     document
         .getElementById("btnPasoAnterior")
@@ -2625,6 +2944,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Consultar los cargos pendientes del usuario.
     await cargarCargosPendientesDesdeSupabase();
+
+    // Consultar las encuestas de satisfacción pendientes.
+    try {
+        await cargarEncuestasPendientesDesdeSupabase();
+    } catch (error) {
+        console.error("Error al cargar las encuestas pendientes:", error);
+
+        const lista = document.getElementById("listaEncuestasPendientes");
+
+        if (lista) {
+            lista.innerHTML = `
+                <p class="text-danger mb-0">
+                    No se pudieron consultar las encuestas pendientes.
+                </p>
+            `;
+        }
+    }
 
     // Búsqueda y ordenamiento del historial.
     document

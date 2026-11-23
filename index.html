@@ -513,6 +513,62 @@
         </div>
     </div>
 
+
+<!-- ENCUESTAS DE SATISFACCIÓN -->
+<div class="accordion-item">
+
+    <h2 class="accordion-header" id="headingEncuestas">
+        <button
+            class="accordion-button collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseEncuestas"
+            aria-expanded="false"
+            aria-controls="collapseEncuestas">
+
+            <i class="bi bi-star me-2"></i>
+            Encuestas de satisfacción pendientes
+
+            <span
+                class="badge bg-warning text-dark ms-2"
+                id="cantidadEncuestasPendientes">
+                0
+            </span>
+
+        </button>
+    </h2>
+
+    <div
+        id="collapseEncuestas"
+        class="accordion-collapse collapse"
+        aria-labelledby="headingEncuestas"
+        data-bs-parent="#perfilAccordion">
+
+        <div class="accordion-body">
+
+            <p class="text-muted">
+                Tu opinión nos ayuda a mejorar el servicio de P&L BIKE.
+            </p>
+
+            <div id="listaEncuestasPendientes">
+                <p class="text-muted mb-0">
+                    Consultando encuestas pendientes...
+                </p>
+            </div>
+
+            <div
+                id="mensajeEncuestas"
+                class="alert alert-info d-none mt-3 mb-0"
+                role="alert">
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+
     <!-- CARGOS PENDIENTES -->
     <div class="accordion-item">
 
@@ -826,16 +882,6 @@
                 </div>
 
                 <hr>
-
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Costo del alquiler</span>
-                    <strong class="text-success fs-5">$0</strong>
-                </div>
-
-                <small class="text-muted d-block mt-2">
-                    El alquiler está incluido en tu membresía vigente.
-                    No se realizará un nuevo cobro.
-                </small>
 
             </div>
 
@@ -1307,63 +1353,136 @@
 
 
 
-<footer class="bg-success text-white text-center mt-auto">
-    
-  <div class="container p-4">
 
-    <div class="row">
+<!-- Modal de respuesta de encuesta -->
+<div
+class="modal fade"
+id="encuestaRespuestaModal"
+tabindex="-1"
+aria-labelledby="tituloEncuesta"
+aria-hidden="true">
 
-      <div class="col-lg-6 col-md-12 mb-4">
-        <h5 class="text-uppercase"><i class="bi bi-bicycle fs-4 text-white"></i> P&L BIKE</h5>
-        <p>
-          Sistema de bicicletas urbanas de San Miguel de Tucumán.
-          Movilidad sostenible, rápida y accesible.
-        </p>
-      </div>
+<div class="modal-dialog modal-dialog-centered">
 
-      <div class="col-lg-3 col-md-6 mb-4">
-        <h5 class="text-uppercase">Secciones</h5>
+    <div class="modal-content">
 
-        <ul class="list-unstyled mb-0">
-            <li>
-                <a href="#" 
-                onclick="showSection('home'); return false;"
-                class="text-white">
-                Inicio
-                </a>
-                </li>
-                
-                <li>
-                <a href="#" 
-                onclick="showSection('viajes'); return false;"
-                class="text-white">
-                Viajes
-                </a>
-                </li>
-                
-                <li>
-                <a href="#" 
-                onclick="showSection('perfil'); return false;"
-                class="text-white">
-                Perfil
-                </a>
-            </li>
+        <div class="modal-header bg-success text-white">
 
-        </ul>
-      </div>
+            <h5 class="modal-title" id="tituloEncuesta">
+                Encuesta de satisfacción
+            </h5>
 
-      <div class="col-lg-3 col-md-6 mb-4">
-        <h5 class="text-uppercase">Contacto</h5>
+            <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar">
+            </button>
 
-        <ul class="list-unstyled">
-          <li>Email: plbike@demo.com</li>
-          <li>Tucumán, Argentina</li>
-        </ul>
-      </div>
+        </div>
+
+        <div class="modal-body">
+
+            <input
+                type="hidden"
+                id="encuestaId">
+
+            <p class="text-muted">
+                Contanos cómo fue tu experiencia en este viaje.
+            </p>
+
+            <div class="mb-3">
+                <label for="calificacionGeneral" class="form-label fw-semibold">
+                    1. ¿Cómo calificás tu experiencia general?
+                </label>
+
+                <select id="calificacionGeneral" class="form-select">
+                    <option value="">Seleccioná una calificación</option>
+                    <option value="1">1 - Muy mala</option>
+                    <option value="2">2 - Mala</option>
+                    <option value="3">3 - Regular</option>
+                    <option value="4">4 - Buena</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="estadoBicicleta" class="form-label fw-semibold">
+                    2. ¿Cómo estaba la bicicleta?
+                </label>
+
+                <select id="estadoBicicleta" class="form-select">
+                    <option value="">Seleccioná una calificación</option>
+                    <option value="1">1 - Muy malo</option>
+                    <option value="2">2 - Malo</option>
+                    <option value="3">3 - Regular</option>
+                    <option value="4">4 - Bueno</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="experienciaEstacion" class="form-label fw-semibold">
+                    3. ¿Cómo fue tu experiencia con la estación?
+                </label>
+
+                <select id="experienciaEstacion" class="form-select">
+                    <option value="">Seleccioná una calificación</option>
+                    <option value="1">1 - Muy mala</option>
+                    <option value="2">2 - Mala</option>
+                    <option value="3">3 - Regular</option>
+                    <option value="4">4 - Buena</option>
+                    <option value="5">5 - Excelente</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="comentarioEncuesta" class="form-label fw-semibold">
+                    4. ¿Querés dejarnos algún comentario?
+                </label>
+
+                <textarea
+                    id="comentarioEncuesta"
+                    class="form-control"
+                    rows="3"
+                    maxlength="1000"
+                    placeholder="Tu comentario es opcional...">
+                </textarea>
+            </div>
+
+            <div
+                id="errorEncuesta"
+                class="alert alert-danger d-none"
+                role="alert">
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-success"
+                id="btnGuardarEncuesta"
+                onclick="guardarRespuestaEncuesta()">
+                Enviar respuestas
+            </button>
+
+        </div>
 
     </div>
 
-  </div>
+</div>
+
+</div>
+
 
   <!-- Modal de mensajes -->
 <div class="modal fade" id="messageModal" tabindex="-1">
@@ -1398,6 +1517,73 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+<footer class="bg-success text-white text-center mt-auto">
+    
+    <div class="container p-4">
+  
+      <div class="row">
+  
+        <div class="col-lg-6 col-md-12 mb-4">
+          <h5 class="text-uppercase"><i class="bi bi-bicycle fs-4 text-white"></i> P&L BIKE</h5>
+          <p>
+            Sistema de bicicletas urbanas de San Miguel de Tucumán.
+            Movilidad sostenible, rápida y accesible.
+          </p>
+        </div>
+  
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="text-uppercase">Secciones</h5>
+  
+          <ul class="list-unstyled mb-0">
+              <li>
+                  <a href="#" 
+                  onclick="showSection('home'); return false;"
+                  class="text-white">
+                  Inicio
+                  </a>
+                  </li>
+                  
+                  <li>
+                  <a href="#" 
+                  onclick="showSection('viajes'); return false;"
+                  class="text-white">
+                  Viajes
+                  </a>
+                  </li>
+                  
+                  <li>
+                  <a href="#" 
+                  onclick="showSection('perfil'); return false;"
+                  class="text-white">
+                  Perfil
+                  </a>
+              </li>
+  
+          </ul>
+        </div>
+  
+        <div class="col-lg-3 col-md-6 mb-4">
+          <h5 class="text-uppercase">Contacto</h5>
+  
+          <ul class="list-unstyled">
+            <li>Email: plbike@demo.com</li>
+            <li>Tucumán, Argentina</li>
+          </ul>
+        </div>
+  
+      </div>
+  
+    </div>
+  
+
+
 
   <div class="text-center p-3 bg-dark">
     © 2026 P&L BIKE - Todos los derechos reservados
