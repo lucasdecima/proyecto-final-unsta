@@ -1,7 +1,6 @@
 //======================================================
 // VARIABLES GLOBALES
 //======================================================
-
 let usuario = null;
 let trips = [];
 let tipoPlanSeleccionado = null;
@@ -12,8 +11,6 @@ let bicicletaSeleccionada = null;
 let qrVerificado = false;
 let intentosQRPorBicicleta = {};
 let pasoAlquilerActual = 1;
-
-
 
 const PLANES_MEMBRESIA = {
     quincenal: {
@@ -27,7 +24,6 @@ const PLANES_MEMBRESIA = {
         importe: 20000
     }
 };
-
 
 function iconoBicicleta(clase = "") {
     return `
@@ -54,8 +50,6 @@ function iconoBicicleta(clase = "") {
         </svg>
     `;
 }
-
-
 
 function seleccionarPlan(tipo) {
 
@@ -2578,9 +2572,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("cantidadViajes").textContent =
         trips.length;
 
-    document.getElementById("fechaRegistro").textContent =
-        usuario.fechaRegistro || "-";
+    
 
+    const fechaRegistro = usuario.fechaRegistro
+    ? new Date(usuario.fechaRegistro)
+    : null;
+
+    document.getElementById("fechaRegistro").textContent =
+    fechaRegistro && !isNaN(fechaRegistro.getTime())
+        ? fechaRegistro.toLocaleDateString("es-AR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            timeZone: "America/Argentina/Buenos_Aires"
+        })
+        : "-";
+        
     // Eventos de alquiler.
     // La estación de origen se cargará dinámicamente desde Supabase.
 

@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P&L BIKE</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -78,115 +79,228 @@
 
     </nav>
 
-    <!-- HOME -->
 
-    <div id="home" class="container mt-4">
+<!-- HOME -->
 
-        <div class="card shadow">
+<div id="home" class="container mt-4 mb-5">
 
-            <div class="card-body text-center">
+    <!-- BIENVENIDA -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
 
-                <h1>P&L BIKE</h1>
+            <h1 class="fw-bold mb-2">
+                ¡Hola, <span id="nombreUsuarioHome">Paula</span>! 👋
+            </h1>
 
-                <p>
-                    Sistema de bicicletas urbanas
-                    de San Miguel de Tucumán
-                </p>
+            <p class="text-muted mb-3">
+                Movete por San Miguel de Tucumán
+                de una manera más sostenible.
+            </p>
 
-<div id="mapa" class="border rounded p-4 bg-light mt-3"></div>     
-
-</div>
-              <div class="text-center mt-4 mb-3">
-                  <button
-                        type="button"
-                        id="btnAbrirAlquiler"
-                        class="btn btn-success btn-lg px-5"
-                        data-bs-toggle="modal"
-                        data-bs-target="#rentBikeModal">
-
-                    Alquilar Bicicleta
-
-                </button>
-              </div>
-
-
-<!-- VIAJE EN CURSO -->
-<div id="viajeActivoCard" class="card shadow mt-4 d-none">
-    <div class="card-body">
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0"><i class="bi bi-bicycle fs-4 text-white"></i> Viaje en curso</h4>
-            <span id="estadoViaje" class="badge bg-success">
-                En curso
-            </span>
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6">
-                <p class="mb-2">
-                    <strong>Bicicleta:</strong>
-                    <span id="bicicletaActiva">-</span>
-                </p>
-
-                <p class="mb-2">
-                    <strong>Origen:</strong>
-                    <span id="origenViaje">-</span>
-                </p>
-
-                <p class="mb-2">
-                    <strong>Destino previsto:</strong>
-                    <span id="destinoViaje">-</span>
-                </p>
-            </div>
-
-            <div class="col-md-6 text-center">
-
-                <div class="text-muted">
-                    Tiempo transcurrido
-                </div>
-
-                <div id="relojViaje" class="reloj-viaje">
-                    00:00:00
-                </div>
-
-                <small class="text-muted">
-                    Límite por viaje: 01:00:00
-                </small>
-
+            <div class="alert alert-success mb-0">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Membresía vigente:</strong>
+                <span id="estadoMembresiaHome">
+                    Consultando...
+                </span>
             </div>
 
         </div>
-
-        <div id="alertaTiempoViaje"
-             class="alert alert-success mt-3 mb-3">
-            🟢 Tenés hasta 1 hora para completar este viaje.
-        </div>
-
-        <div class="mb-3">
-            <label for="estacionDevolucion" class="form-label">
-                <strong>Estación de devolución</strong>
-            </label>
-
-            <select id="estacionDevolucion" class="form-select">
-                <option value="">Seleccioná dónde devolver la bicicleta</option>
-            </select>
-        </div>
-
-        <button id="btnFinalizarViaje"
-                class="btn btn-success w-100"
-                onclick="finalizarViaje()">
-            <i class="bi bi-bicycle"></i> Finalizar viaje
-        </button>
-
     </div>
-</div>
 
-            </div>
+
+    <!-- PRÓXIMA AVENTURA -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body p-4 text-center">
+
+            <h2 class="fw-bold mb-2">
+                Tu próxima aventura empieza acá.
+            </h2>
+
+            <h4 class="fw-semibold mt-3">
+                Alquilá tu bicicleta
+            </h4>
+
+            <p class="text-muted">
+                Conocé las estaciones y bicicletas disponibles
+            
+            </p>
+
+            <!-- MAPA DE ESTACIONES -->
+            <div id="mapa" class="border rounded bg-light mt-3"></div>
+
+            <!-- BOTÓN DE ALQUILER -->
+            <button
+                type="button"
+                id="btnAbrirAlquiler"
+                class="btn btn-success btn-lg px-5 mt-4"
+                data-bs-toggle="modal"
+                data-bs-target="#rentBikeModal">
+
+                <i class="bi bi-bicycle me-2"></i>
+                Alquilar bicicleta
+
+            </button>
 
         </div>
 
     </div>
+
+
+    <!-- ACTIVIDAD DE HOY -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body p-4">
+
+            <h4 class="fw-bold mb-3">
+                Tu actividad de hoy
+            </h4>
+
+            <div class="row g-3">
+
+                <div class="col-6">
+
+                    <div class="bg-light rounded p-3 text-center h-100">
+
+                        <h2
+                            class="fw-bold text-success mb-1"
+                            id="tiempoDisponibleHome">
+                            8 hs
+                        </h2>
+
+                        <span class="text-muted small">
+                            Tiempo disponible*
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="col-6">
+
+                    <div class="bg-light rounded p-3 text-center h-100">
+
+                        <h2
+                            class="fw-bold text-success mb-1"
+                            id="bicicletasSistemaHome">
+                            30
+                        </h2>
+
+                        <span class="text-muted small">
+                            Bicicletas en el sistema
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <small class="text-muted d-block mt-3">
+                *El tiempo disponible se actualizará según los
+                viajes realizados durante el día.
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- VIAJE EN CURSO -->
+    <div id="viajeActivoCard" class="card shadow mt-4 d-none">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h4 class="mb-0">
+                    <i class="bi bi-bicycle fs-4 text-white"></i>
+                    Viaje en curso
+                </h4>
+
+                <span id="estadoViaje" class="badge bg-success">
+                    En curso
+                </span>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <p class="mb-2">
+                        <strong>Bicicleta:</strong>
+                        <span id="bicicletaActiva">-</span>
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Origen:</strong>
+                        <span id="origenViaje">-</span>
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Destino previsto:</strong>
+                        <span id="destinoViaje">-</span>
+                    </p>
+
+                </div>
+
+                <div class="col-md-6 text-center">
+
+                    <div class="text-muted">
+                        Tiempo transcurrido
+                    </div>
+
+                    <div id="relojViaje" class="reloj-viaje">
+                        00:00:00
+                    </div>
+
+                    <small class="text-muted">
+                        Límite por viaje: 01:00:00
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div id="alertaTiempoViaje"
+                 class="alert alert-success mt-3 mb-3">
+
+                🟢 Tenés hasta 1 hora para completar este viaje.
+
+            </div>
+
+            <div class="mb-3">
+
+                <label for="estacionDevolucion" class="form-label">
+                    <strong>Estación de devolución</strong>
+                </label>
+
+                <select id="estacionDevolucion" class="form-select">
+
+                    <option value="">
+                        Seleccioná dónde devolver la bicicleta
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button id="btnFinalizarViaje"
+                    class="btn btn-success w-100"
+                    onclick="finalizarViaje()">
+
+                <i class="bi bi-bicycle"></i>
+                Finalizar viaje
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
     <!-- VIAJES -->
 
@@ -277,117 +391,209 @@
 
             <div class="card-body">
 
-                <h2>Mi Perfil</h2>
+                
+<h2 class="mb-4">Mi Perfil</h2>
 
-                    <p>
-                        <strong>Usuario:</strong>
-                        <span id="nombreUsuario"></span>
-                    </p>
+<div class="accordion" id="perfilAccordion">
 
-                    <p>
-                        <strong>Email:</strong>
-                        <span id="emailUsuario"></span>
-                    </p>                
-                    
-                    <p>
+    <!-- PERFIL -->
+    <div class="accordion-item">
 
-                        <strong>Miembro desde:</strong>
-                    
-                        <span id="fechaRegistro"></span>
-                    
-                    </p>
+        <h2 class="accordion-header" id="headingPerfil">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapsePerfil"
+                aria-expanded="false"
+                aria-controls="collapsePerfil">
 
-                    <p>
-                        <strong>Viajes realizados:</strong>
-                        <span id="cantidadViajes">0</span>
-                    </p>
+                <i class="bi bi-person-circle me-2"></i>
+                Perfil
 
-                    <hr>
-                    
-                    <h5>Estadísticas</h5>
-                    <br>
-                    <p>
+            </button>
+        </h2>
+
+        <div
+            id="collapsePerfil"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingPerfil"
+            data-bs-parent="#perfilAccordion">
+
+            <div class="accordion-body">
+
+                <p>
+                    <strong>Usuario:</strong>
+                    <span id="nombreUsuario"></span>
+                </p>
+
+                <p>
+                    <strong>Email:</strong>
+                    <span id="emailUsuario"></span>
+                </p>
+
+                <p class="mb-0">
+                    <strong>Miembro desde:</strong>
+                    <span id="fechaRegistro"></span>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header" id="headingEstadisticas">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseEstadisticas"
+                aria-expanded="false"
+                aria-controls="collapseEstadisticas">
+
+                <i class="bi bi-bar-chart-line me-2"></i>
+                Estadísticas
+
+            </button>
+        </h2>
+
+        <div
+            id="collapseEstadisticas"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingEstadisticas"
+            data-bs-parent="#perfilAccordion">
+
+            <div class="accordion-body">
+
+                <p>
+                    <strong>Viajes realizados:</strong>
+                    <span id="cantidadViajes">0</span>
+                </p>
+
+                <hr>
+
+                <p>
                     <strong>Kilómetros recorridos:</strong>
                     <span id="kmTotales">0</span> km
-                    </p>
+                </p>
 
-                    <p>
+                <p>
                     <strong>Último viaje:</strong>
                     <span id="ultimoViaje">Sin viajes</span>
-                    </p>
+                </p>
 
-                    <p>
+                <p>
                     <strong>Estación más utilizada:</strong>
                     <span id="estacionFavorita">-</span>
-                    </p>
-                    
-                    <p>
-                        <strong>Viaje más largo:</strong>
-                        <span id="viajeMasLargo">0</span> km
-                    </p>
-                    
-                    <p>
-                        <strong>Promedio por viaje:</strong>
-                        <span id="promedioKm">0</span> km
-                    </p>
-                    
-                    <p>
-                        <strong>Estaciones utilizadas:</strong>
-                        <span id="estacionesUsadas">0</span>
-                    </p>
+                </p>
 
-                    <p>
-                        <strong>Tiempo disponible hoy: <span id="tiempoDisponibleHoy">8 horas</span></strong>
-                        
-                    </p>
+                <p>
+                    <strong>Viaje más largo:</strong>
+                    <span id="viajeMasLargo">0</span> km
+                </p>
 
+                <p>
+                    <strong>Promedio por viaje:</strong>
+                    <span id="promedioKm">0</span> km
+                </p>
 
-                        <hr class="my-4">
+                <p>
+                    <strong>Estaciones utilizadas:</strong>
+                    <span id="estacionesUsadas">0</span>
+                </p>
 
-                        <div id="cargosPendientesCard">
-                        
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Cargos pendientes</h5>
-                                <span class="badge bg-warning text-dark" id="cantidadCargosPendientes">
-                                    0
-                                </span>
-                            </div>
-                        
-                            <div class="alert alert-light border">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong>Total pendiente:</strong>
-                                    <strong class="text-danger fs-5" id="totalCargosPendientes">
-                                        $0,00
-                                    </strong>
-                                </div>
-                            </div>
-                        
-                            <div id="listaCargosPendientes">
-                                <p class="text-muted mb-0">
-                                    Consultando cargos pendientes...
-                                </p>
-                            </div>
-                        
-                            <div id="mensajeCargosPendientes"
-                                 class="alert alert-info d-none mt-3"
-                                 role="alert">
-                            </div>
-                        
-                            <button
-                                type="button"
-                                id="btnPagarCargos"
-                                class="btn btn-success w-100 mt-3"
-                                onclick="pagarCargosPendientes()"
-                                disabled>
-                                💳 Pagar cargos pendientes
-                            </button>
-                        
-                            <small class="text-muted d-block mt-2">
-                                Los pagos son simulados y se registran con fines académicos.
-                                No se realizan cobros reales.
-                            </small>
-                        
+                <p class="mb-0">
+                    <strong>Tiempo disponible hoy:</strong>
+                    <span id="tiempoDisponibleHoy">8 horas</span>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CARGOS PENDIENTES -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header" id="headingCargos">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseCargos"
+                aria-expanded="false"
+                aria-controls="collapseCargos">
+
+                <i class="bi bi-wallet2 me-2"></i>
+                Cargos pendientes
+
+                <span
+                    class="badge bg-warning text-dark ms-2"
+                    id="cantidadCargosPendientes">
+                    0
+                </span>
+
+            </button>
+        </h2>
+
+        <div
+            id="collapseCargos"
+            class="accordion-collapse collapse"
+            aria-labelledby="headingCargos"
+            data-bs-parent="#perfilAccordion">
+
+            <div class="accordion-body">
+
+                <div id="cargosPendientesCard">
+
+                    <div class="alert alert-light border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Total pendiente:</strong>
+
+                            <strong
+                                class="text-danger fs-5"
+                                id="totalCargosPendientes">
+                                $0,00
+                            </strong>
                         </div>
+                    </div>
+
+                    <div id="listaCargosPendientes">
+                        <p class="text-muted mb-0">
+                            Consultando cargos pendientes...
+                        </p>
+                    </div>
+
+                    <div
+                        id="mensajeCargosPendientes"
+                        class="alert alert-info d-none mt-3"
+                        role="alert">
+                    </div>
+
+                    <button
+                        type="button"
+                        id="btnPagarCargos"
+                        class="btn btn-success w-100 mt-3"
+                        onclick="pagarCargosPendientes()"
+                        disabled>
+
+                        💳 Pagar cargos pendientes
+
+                    </button>
+
+                    <small class="text-muted d-block mt-2">
+                        Los pagos son simulados y se registran con fines académicos.
+                        No se realizan cobros reales.
+                    </small>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
 
 
             </div>
