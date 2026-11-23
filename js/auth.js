@@ -539,7 +539,7 @@ async function confirmarCerrarSesion() {
             "danger"
         );
     }
-}s
+}
 
 // ============================================
 // FONDO ANIMADO DE BICICLETAS

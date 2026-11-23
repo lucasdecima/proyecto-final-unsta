@@ -788,7 +788,7 @@ let marcadoresEstaciones = {};
 
 
 // Inicializar mapa interactivo
-function inicializarMapa() {
+function inicializarMapa(publico = false) {
 
     const elementoMapa = document.getElementById("mapa");
 
@@ -797,19 +797,58 @@ function inicializarMapa() {
         return;
     }
 
-    // Evitar inicializar el mapa más de una vez
-    if (mapaLeaflet) {
-        return;
-    }
+    if (mapaLeaflet) return;
 
-    mapaLeaflet = L.map("mapa").setView([-26.829, -65.195], 14);
+    const opciones = publico
+        ? {
+            zoomControl: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            minZoom: 14,
+            maxZoom: 14
+        }
+        : {};
 
-    // Cargar mapa de OpenStreetMap
+    mapaLeaflet = L.map(elementoMapa, opciones)
+        .setView([-26.829, -65.195], 14);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(mapaLeaflet);
 }
 
+
+function crearIconoEstacionPublica() {
+    return L.divIcon({
+        className: "marcador-estacion-publica",
+        html: `
+            <svg width="42" height="52" viewBox="0 0 100 120"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M50 5 C25 5 8 23 8 47 C8 76 50 112 50 112
+                       C50 112 92 76 92 47 C92 23 75 5 50 5Z"
+                    fill="#16A34A"
+                />
+                <g fill="none" stroke="white" stroke-width="5"
+                   stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="34" cy="65" r="10"/>
+                    <circle cx="68" cy="65" r="10"/>
+                    <path d="M34 65 L45 43 L57 65 L34 65
+                             M45 43 L56 43 L68 65
+                             M49 65 L68 65
+                             M41 51 L45 43
+                             M53 39 H60"/>
+                </g>
+            </svg>
+        `,
+        iconSize: [42, 52],
+        iconAnchor: [21, 52],
+        popupAnchor: [0, -48]
+    });
+}
 
 
 // ============================================
@@ -1162,6 +1201,55 @@ async function cargarEstacionesDesdeSupabase() {
 }
 
 
+async function cargarEstacionesPublicasDesdeSupabase() {
+
+    const { data, error } = await supabaseClient
+        .from("estaciones")
+        .select("id, nombre, latitud, longitud")
+        .eq("activa", true)
+        .order("id");
+
+    if (error) throw error;
+
+    estaciones = {};
+    coordenadasEstaciones = {};
+
+    data.forEach(estacion => {
+
+        estaciones[estacion.nombre] = {
+            id: estacion.id
+        };
+
+        coordenadasEstaciones[estacion.nombre] = [
+            Number(estacion.latitud),
+            Number(estacion.longitud)
+        ];
+
+    });
+
+    console.log("Estaciones públicas cargadas:", estaciones);
+}
+
+function renderMapaPublico() {
+
+    inicializarMapa(true);
+
+    if (!mapaLeaflet) return;
+
+    Object.entries(estaciones).forEach(([nombre]) => {
+
+        const coordenadas = coordenadasEstaciones[nombre];
+
+        if (!coordenadas) return;
+
+        const marcador = L.marker(coordenadas, {
+            icon: crearIconoEstacionPublica()
+        }).addTo(mapaLeaflet);
+
+        marcador.bindPopup(`<strong>${nombre}</strong>`);
+
+    });
+}
 
 
 
@@ -2434,18 +2522,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!esPaginaPrivada) {
 
-        try {
-            await cargarEstacionesDesdeSupabase();
-            renderEstaciones();
+    try {
+        await cargarEstacionesPublicasDesdeSupabase();
+        renderMapaPublico();
 
-        } catch (error) {
-            console.error(
-                "Error al cargar el mapa público:",
-                error
-            );
-        }
+    } catch (error) {
+        console.error(
+            "Error al cargar el mapa público:",
+            error
+        );
+    }
 
-        return;
+    return;
     }
 
     // ============================================

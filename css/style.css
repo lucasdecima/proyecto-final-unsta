@@ -845,3 +845,11 @@ footer .text-center.p-3{
 .icono-bicicleta-blanca {
     color: #ffffff;
 }
+
+#mapa {
+    width: 85%;
+    max-width: 950px;
+    height: 520px;
+    margin: 0 auto;
+    border-radius: 15px;
+}
