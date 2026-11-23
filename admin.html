@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administración | P&L BIKE</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <!-- Estilos del proyecto -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .admin-navbar {
+            background-color: var(--pl-pine);
+        }
+
+        .admin-hero {
+            background: linear-gradient(
+                135deg,
+                var(--pl-pine-dark),
+                var(--pl-pine)
+            );
+            color: white;
+            border-radius: 16px;
+        }
+
+        .admin-stat-card {
+            border: none;
+            border-radius: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .admin-stat-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background-color: rgba(31, 111, 84, 0.12);
+            color: var(--pl-pine);
+            font-size: 1.5rem;
+        }
+
+        .admin-section-card {
+            border: none;
+            border-radius: 14px;
+            height: 100%;
+        }
+
+        .admin-section-icon {
+            font-size: 2rem;
+            color: var(--pl-pine);
+        }
+
+        .admin-footer {
+            background-color: var(--pl-pine-dark);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CONTENIDO ADMINISTRATIVO -->
+    <!-- Se muestra únicamente después de verificar el rol -->
+
+    <div id="adminContenido" style="display: none;">
+
+        <!-- NAVBAR -->
+        <nav class="navbar navbar-expand-lg navbar-dark admin-navbar shadow-sm">
+
+            <div class="container">
+
+                <a class="navbar-brand fw-bold" href="admin.html">
+                    <i class="bi bi-bicycle me-2"></i>
+                    P&L BIKE
+                </a>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <span class="text-white d-none d-md-inline">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Administrador
+                    </span>
+
+                    <button
+                        class="btn btn-outline-light btn-sm"
+                        type="button"
+                        onclick="cerrarSesion()">
+
+                        <i class="bi bi-box-arrow-right me-1"></i>
+                        Cerrar sesión
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </nav>
+
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="container py-4 py-md-5">
+
+            <!-- BIENVENIDA -->
+            <section class="admin-hero shadow-sm p-4 p-md-5 mb-4">
+
+                <span class="badge bg-warning text-dark mb-3">
+                    PANEL DE ADMINISTRACIÓN
+                </span>
+
+                <h1 class="fw-bold">
+                    ¡Hola, <span id="nombreAdministrador">Administrador</span>! 👋
+                </h1>
+
+                <p class="mb-0">
+                    Administrá y supervisá el funcionamiento
+                    de P&L BIKE desde un solo lugar.
+                </p>
+
+            </section>
+
+
+            <!-- INDICADORES -->
+            <section class="mb-5">
+
+                <h4 class="fw-bold mb-3">
+                    Resumen general
+                </h4>
+
+                <div class="row g-3">
+
+                    <!-- USUARIOS -->
+                    <div class="col-6 col-lg-3">
+
+                        <div class="card admin-stat-card shadow-sm h-100">
+
+                            <div class="card-body">
+
+                                <div class="admin-stat-icon mb-3">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+
+                                <h3 class="fw-bold mb-1"
+                                    id="totalUsuariosAdmin">
+                                    —
+                                </h3>
+
+                                <p class="text-muted small mb-0">
+                                    Usuarios registrados
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BICICLETAS -->
+                    <div class="col-6 col-lg-3">
+
+                        <div class="card admin-stat-card shadow-sm h-100">
+
+                            <div class="card-body">
+
+                                <div class="admin-stat-icon mb-3">
+                                    <i class="bi bi-bicycle"></i>
+                                </div>
+
+                                <h3 class="fw-bold mb-1"
+                                    id="totalBicicletasAdmin">
+                                    30
+                                </h3>
+
+                                <p class="text-muted small mb-0">
+                                    Bicicletas en el sistema
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ENCUESTAS -->
+                    <div class="col-6 col-lg-3">
+
+                        <div class="card admin-stat-card shadow-sm h-100">
+
+                            <div class="card-body">
+
+                                <div class="admin-stat-icon mb-3">
+                                    <i class="bi bi-clipboard-check"></i>
+                                </div>
+
+                                <h3 class="fw-bold mb-1"
+                                    id="totalEncuestasAdmin">
+                                    —
+                                </h3>
+
+                                <p class="text-muted small mb-0">
+                                    Encuestas recibidas
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SATISFACCIÓN -->
+                    <div class="col-6 col-lg-3">
+
+                        <div class="card admin-stat-card shadow-sm h-100">
+
+                            <div class="card-body">
+
+                                <div class="admin-stat-icon mb-3">
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+
+                                <h3 class="fw-bold mb-1"
+                                    id="promedioSatisfaccionAdmin">
+                                    —
+                                </h3>
+
+                                <p class="text-muted small mb-0">
+                                    Satisfacción promedio
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- SECCIONES ADMINISTRATIVAS -->
+            <section class="mb-5">
+
+                <h4 class="fw-bold mb-3">
+                    Gestión del sistema
+                </h4>
+
+                <div class="row g-3">
+
+                    <!-- ENCUESTAS -->
+                    <div class="col-md-6 col-lg-4">
+
+                        <div class="card admin-section-card shadow-sm">
+
+                            <div class="card-body p-4">
+
+                                <i class="bi bi-star-half admin-section-icon"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Encuestas de satisfacción
+                                </h5>
+
+                                <p class="text-muted">
+                                    Consultá las calificaciones,
+                                    comentarios y opiniones de los usuarios.
+                                </p>
+
+                                <span class="badge bg-secondary">
+                                    Próximamente
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- USUARIOS -->
+                    <div class="col-md-6 col-lg-4">
+
+                        <div class="card admin-section-card shadow-sm">
+
+                            <div class="card-body p-4">
+
+                                <i class="bi bi-people admin-section-icon"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Usuarios
+                                </h5>
+
+                                <p class="text-muted">
+                                    Consultá las cuentas registradas
+                                    y sus membresías.
+                                </p>
+
+                                <span class="badge bg-secondary">
+                                    Próximamente
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BICICLETAS Y ESTACIONES -->
+                    <div class="col-md-6 col-lg-4">
+
+                        <div class="card admin-section-card shadow-sm">
+
+                            <div class="card-body p-4">
+
+                                <i class="bi bi-geo-alt admin-section-icon"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Bicicletas y estaciones
+                                </h5>
+
+                                <p class="text-muted">
+                                    Supervisá las bicicletas,
+                                    estaciones y disponibilidad del servicio.
+                                </p>
+
+                                <span class="badge bg-secondary">
+                                    Próximamente
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <!-- FOOTER -->
+        <footer class="admin-footer text-center py-3 mt-4">
+
+            <small>
+                © 2026 P&L BIKE | Panel de administración
+            </small>
+
+        </footer>
+
+    </div>
+
+
+    <!-- MODAL CERRAR SESIÓN -->
+    <div
+        class="modal fade"
+        id="logoutModal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Cerrar sesión
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    ¿Estás segura de que querés cerrar la sesión
+                    administrativa?
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                        Cancelar
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger"
+                        onclick="confirmarCerrarSesion()">
+
+                        Cerrar sesión
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="js/auth.js"></script>
+
+
+    <!-- PROTECCIÓN Y DATOS DEL ADMINISTRADOR -->
+    <script>
+
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            const accesoPermitido = await verificarSesion();
+
+            if (!accesoPermitido) return;
+
+            if (!usuarioAutenticado || usuarioAutenticado.rol !== "admin") {
+                window.location.replace("index.html");
+                return;
+            }
+
+            document.getElementById("nombreAdministrador").textContent =
+                usuarioAutenticado.nombre;
+
+            document.getElementById("adminContenido").style.display = "block";
+
+        });
+
+    </script>
+
+</body>
+</html>

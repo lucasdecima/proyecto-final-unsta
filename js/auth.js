@@ -413,6 +413,19 @@ async function login() {
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
 
+    const tipoAccesoSeleccionado =
+    document.querySelector('input[name="tipoAcceso"]:checked')?.value;
+
+    if (!tipoAccesoSeleccionado) {
+        mostrarModal(
+            "Seleccioná un tipo de acceso",
+            "Elegí si querés ingresar como Cliente o Administrador.",
+            "warning"
+        );
+    
+        return;
+    }
+
     if (!email || !password) {
         mostrarModal(
             "Campos incompletos",
@@ -448,52 +461,100 @@ async function login() {
         const { data: perfil, error: errorPerfil } =
             await supabaseClient
                 .from("profiles")
-                .select("nombre, fecha_registro")
+                .select("nombre, fecha_registro, rol")
                 .eq("id", usuarioAuth.id)
                 .maybeSingle();
 
-        if (errorPerfil) {
+            if (errorPerfil || !perfil) {
             console.error("No se pudo consultar el perfil:", errorPerfil);
-        }
+            
+            await supabaseClient.auth.signOut();
+            
+            mostrarModal(
+                "Error al verificar la cuenta",
+                "No se pudo obtener tu perfil. Intentá iniciar sesión nuevamente.",
+                "danger"
+            );
+         return;
+}
 
         const nombre =
-            perfil?.nombre ||
-            usuarioAuth.user_metadata?.nombre ||
-            "Usuario";
+        perfil.nombre ||
+        usuarioAuth.user_metadata?.nombre ||
+                "Usuario";
 
-        // Compatibilidad con el código existente de index.html.
-        // Nunca guardamos la contraseña en localStorage.
+                const rol = perfil.rol;
+
+                // Verificamos que el rol sea válido.
+                if (!["usuario", "admin"].includes(rol)) {
+                
+                    await supabaseClient.auth.signOut();
+                
+                    mostrarModal(
+                        "Rol no válido",
+                        "No se pudo verificar el tipo de cuenta. Contactá al administrador.",
+                        "danger"
+                    );
+                
+                    return;
+                }
+                
+                // Verificamos que coincida con la opción seleccionada.
+                if (tipoAccesoSeleccionado !== rol) {
+                
+                    await supabaseClient.auth.signOut();
+                
+                    mostrarModal(
+                        "Tipo de acceso incorrecto",
+                        rol === "admin"
+                            ? "Esta cuenta tiene permisos de administrador. Seleccioná Administrador para ingresar."
+                            : "Esta cuenta corresponde a un cliente. Seleccioná Cliente para ingresar.",
+                        "warning"
+                    );
+                
+                    return;
+                }
+
+        // Datos del usuario autenticado.
         usuarioAutenticado = {
             id: usuarioAuth.id,
             nombre: nombre,
             email: usuarioAuth.email,
-            fechaRegistro: perfil?.fecha_registro || null
+            fechaRegistro: perfil.fecha_registro || null,
+            rol: rol
         };
 
+        // Si es administrador, ingresa al panel administrativo.
+        if (rol === "admin") {
+            window.location.replace("admin.html");
+            return;
+        }
+
+        // Si es usuario común, conservamos el modal de bienvenida.
         const welcomeName = document.getElementById("welcomeName");
 
-if (welcomeName) {
-    welcomeName.textContent = nombre;
-}
+        if (welcomeName) {
+            welcomeName.textContent = nombre;
+        }
 
-const welcomeElement = document.getElementById("welcomeModal");
+        const welcomeElement = document.getElementById("welcomeModal");
 
-if (!welcomeElement) {
-    window.location.href = "index.html";
-    return;
-}
+        if (!welcomeElement) {
+            window.location.replace("index.html");
+            return;
+        }
 
-const modal = bootstrap.Modal.getOrCreateInstance(welcomeElement);
+        const modal = bootstrap.Modal.getOrCreateInstance(welcomeElement);
 
-modal.show();
+        modal.show();
 
-welcomeElement.addEventListener("hidden.bs.modal", () => {
-    window.location.href = "index.html";
-}, { once: true });
+        welcomeElement.addEventListener("hidden.bs.modal", () => {
+            window.location.replace("index.html");
+        }, { once: true });
 
-setTimeout(() => {
-    modal.hide();
-}, 3000);
+        setTimeout(() => {
+            modal.hide();
+        }, 3000);
 
 
     } catch (error) {
@@ -579,7 +640,6 @@ function crearFondoBicis() {
     }
 }
 
-
 // ============================================
 // VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
 // ============================================
@@ -588,10 +648,14 @@ async function verificarSesion() {
 
     const rutaActual = window.location.pathname;
 
-    const esPaginaPrivada =
-    rutaActual.endsWith("/index.html") ||
-    rutaActual === "/" ||
-    rutaActual.endsWith("/");
+    const esPaginaAdmin = rutaActual.endsWith("/admin.html");
+
+    const esPaginaIndex =
+        rutaActual.endsWith("/index.html") ||
+        rutaActual === "/" ||
+        rutaActual.endsWith("/");
+
+    const esPaginaPrivada = esPaginaAdmin || esPaginaIndex;
 
     // Las páginas públicas no requieren autenticación.
     if (!esPaginaPrivada) {
@@ -619,25 +683,52 @@ async function verificarSesion() {
         const { data: perfil, error: errorPerfil } =
             await supabaseClient
                 .from("profiles")
-                .select("nombre, fecha_registro")
+                .select("nombre, fecha_registro, rol")
                 .eq("id", usuarioAuth.id)
                 .maybeSingle();
 
-        if (errorPerfil) {
+        if (errorPerfil || !perfil) {
             console.error(
                 "Error al verificar el perfil:",
                 errorPerfil
             );
+
+            usuarioAutenticado = null;
+
+            window.location.replace("login.html");
+            return false;
+        }
+
+        const rol = perfil.rol;
+
+        if (!["usuario", "admin"].includes(rol)) {
+            usuarioAutenticado = null;
+
+            window.location.replace("login.html");
+            return false;
+        }
+
+        // Protección del panel administrativo.
+        if (esPaginaAdmin && rol !== "admin") {
+            window.location.replace("index.html");
+            return false;
+        }
+
+        // El administrador ingresa a su panel.
+        if (esPaginaIndex && rol === "admin") {
+            window.location.replace("admin.html");
+            return false;
         }
 
         usuarioAutenticado = {
             id: usuarioAuth.id,
             nombre:
-                perfil?.nombre ||
+                perfil.nombre ||
                 usuarioAuth.user_metadata?.nombre ||
                 "Usuario",
             email: usuarioAuth.email,
-            fechaRegistro: perfil?.fecha_registro || null
+            fechaRegistro: perfil.fecha_registro || null,
+            rol: rol
         };
 
         return true;
@@ -653,9 +744,6 @@ async function verificarSesion() {
         return false;
     }
 }
-
-
-
 
 // ============================================
 // INICIALIZACIÓN
@@ -714,7 +802,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
-
 // ============================================
 // PROTECCIÓN AL VOLVER A UNA PÁGINA PRIVADA
 // ============================================
@@ -725,6 +812,7 @@ window.addEventListener("pageshow", async (event) => {
 
     const esPaginaPrivada =
         rutaActual.endsWith("/index.html") ||
+        rutaActual.endsWith("/admin.html") ||
         rutaActual === "/" ||
         rutaActual.endsWith("/");
 
