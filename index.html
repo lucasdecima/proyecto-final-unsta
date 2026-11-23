@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
 
@@ -23,7 +24,7 @@
                 class="navbar-brand fw-bold"
                 href="#"
                 onclick="showSection('home'); return false;">
-                🚲 P&L BIKE
+                <i class="bi bi-bicycle"></i> P&L BIKE
             </a>
 
             <button class="navbar-toggler"
@@ -97,13 +98,15 @@
 </div>
               <div class="text-center mt-4 mb-3">
                   <button
-                      class="btn btn-success btn-lg px-5"
-                      data-bs-toggle="modal"
-                      data-bs-target="#rentBikeModal">
+                        type="button"
+                        id="btnAbrirAlquiler"
+                        class="btn btn-success btn-lg px-5"
+                        data-bs-toggle="modal"
+                        data-bs-target="#rentBikeModal">
 
-                      Alquilar Bicicleta
+                    Alquilar Bicicleta
 
-                  </button>
+                </button>
               </div>
 
 
@@ -112,7 +115,7 @@
     <div class="card-body">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">🚲 Viaje en curso</h4>
+            <h4 class="mb-0"><i class="bi bi-bicycle fs-4 text-white"></i> Viaje en curso</h4>
             <span id="estadoViaje" class="badge bg-success">
                 En curso
             </span>
@@ -173,7 +176,7 @@
         <button id="btnFinalizarViaje"
                 class="btn btn-success w-100"
                 onclick="finalizarViaje()">
-            🚲 Finalizar viaje
+            <i class="bi bi-bicycle"></i> Finalizar viaje
         </button>
 
     </div>
@@ -395,11 +398,13 @@
 
     
 
-    <div class="modal fade"
+   <div class="modal fade"
      id="rentBikeModal"
-     tabindex="-1">
+     tabindex="-1"
+     aria-hidden="true">
 
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+
 
         <div class="modal-content">
 
@@ -427,102 +432,219 @@
                 Consultando tu membresía...
             </div>
 
-            <!-- FLUJO DE ALQUILER -->
-            <div id="contenedorFlujoAlquiler">
-                
-                
-<!-- ESTACIÓN DE ORIGEN -->
-<div class="mb-3">
 
-    <label for="origen" class="form-label fw-bold">
-        Estación de origen
-    </label>
+<!-- FLUJO DE ALQUILER POR PASOS -->
+<div id="contenedorFlujoAlquiler">
 
-    <select id="origen" class="form-select">
-        <option value="">Seleccioná una estación</option>
-    </select>
+    <!-- INDICADOR DE PROGRESO -->
+    <div class="alquiler-progreso mb-4">
 
-</div>
+        <div class="d-flex justify-content-between text-center">
 
-<!-- GEOLOCALIZACIÓN -->
-<div class="mb-3">
+            <div class="flex-fill paso-indicador activo" id="indicadorPaso1">
+                <div class="paso-numero mx-auto">1</div>
+                <small>Estación</small>
+            </div>
 
-    <button
-        type="button"
-        id="btnGeolocalizacion"
-        class="btn btn-outline-success w-100">
+            <div class="flex-fill paso-indicador" id="indicadorPaso2">
+                <div class="paso-numero mx-auto">2</div>
+                <small>Bicicleta</small>
+            </div>
 
-        📍 Verificar mi ubicación
+            <div class="flex-fill paso-indicador" id="indicadorPaso3">
+                <div class="paso-numero mx-auto">3</div>
+                <small>Confirmación</small>
+            </div>
 
-    </button>
+        </div>
 
-    <div
-        id="estadoGeolocalizacion"
-        class="alert alert-info mt-2 mb-0">
+        <div class="progress mt-3" style="height: 5px;">
+            <div
+                id="barraProgresoAlquiler"
+                class="progress-bar bg-success"
+                role="progressbar"
+                style="width: 33%;">
+            </div>
+        </div>
 
-        Necesitamos verificar tu ubicación para continuar.
+    </div>
+
+
+    <!-- PASO 1: ESTACIÓN Y UBICACIÓN -->
+    <div id="pasoAlquiler1" class="paso-alquiler">
+
+        <h6 class="fw-bold mb-3">
+            📍 Elegí dónde retirar tu bicicleta
+        </h6>
+
+        <div class="mb-3">
+
+            <label for="origen" class="form-label fw-semibold">
+                Estación de origen
+            </label>
+
+            <select id="origen" class="form-select">
+                <option value="">Seleccioná una estación</option>
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <button
+                type="button"
+                id="btnGeolocalizacion"
+                class="btn btn-outline-success w-100">
+
+                📍 Verificar mi ubicación
+
+            </button>
+
+            <div
+                id="estadoGeolocalizacion"
+                class="alert alert-info mt-2 mb-0">
+
+                Necesitamos verificar tu ubicación para continuar.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PASO 2: SELECCIÓN DE BICICLETA Y QR -->
+    <div id="pasoAlquiler2" class="paso-alquiler d-none">
+
+        <h6 class="fw-bold mb-2">
+            <i class="bi bi-bicycle fs-4 text-white"></i> Elegí tu bicicleta
+        </h6>
+
+        <p class="text-muted small mb-3">
+            Seleccioná una de las bicicletas disponibles en la estación.
+        </p>
+
+        <div id="contenedorBicicletas" class="d-none">
+
+            <div id="listaBicicletas" class="row g-2">
+
+                <!-- Las bicicletas se cargarán dinámicamente desde Supabase -->
+
+            </div>
+
+        </div>
+
+        <div id="contenedorQR" class="d-none mt-4">
+
+            <hr>
+
+            <h6 class="fw-bold mb-3">
+                📷 Verificación de bicicleta
+            </h6>
+
+            <div class="card border-success">
+                <div class="card-body text-center">
+
+                    <div class="text-muted small mb-1">
+                        Bicicleta seleccionada
+                    </div>
+
+                    <h5 class="fw-bold text-success mb-3">
+                        <span id="codigoBicicletaSeleccionada">-</span>
+                    </h5>
+
+                    <button
+                        type="button"
+                        id="btnEscanearQR"
+                        class="btn btn-outline-success w-100">
+
+                        Escanear código QR
+
+                    </button>
+
+                    <div
+                        id="resultadoQR"
+                        class="alert alert-secondary mt-3 mb-0 d-none">
+                    </div>
+
+                    <small
+                        id="intentosQR"
+                        class="text-muted d-block mt-2">
+                        Intentos disponibles: 3
+                    </small>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PASO 3: RESUMEN Y CONFIRMACIÓN -->
+    <div id="pasoAlquiler3" class="paso-alquiler d-none">
+
+        <h6 class="fw-bold mb-3">
+            ✓ Revisá los datos de tu alquiler
+        </h6>
+
+        <div class="card border-success">
+
+            <div class="card-body">
+
+                <div class="text-center mb-3">
+
+                    <div class="fs-1"><i class="bi bi-bicycle fs-4 text-white"></i></div>
+
+                    <h5 class="fw-bold text-success mb-0"
+                        id="resumenBicicleta">
+                        -
+                    </h5>
+
+                    <small class="text-muted">
+                        Bicicleta seleccionada
+                    </small>
+
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Estación de retiro</span>
+                    <strong class="text-end" id="resumenEstacion">-</strong>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Membresía</span>
+                    <strong class="text-end" id="resumenMembresia">-</strong>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Costo del alquiler</span>
+                    <strong class="text-success fs-5">$0</strong>
+                </div>
+
+                <small class="text-muted d-block mt-2">
+                    El alquiler está incluido en tu membresía vigente.
+                    No se realizará un nuevo cobro.
+                </small>
+
+            </div>
+
+        </div>
+
+        <div class="alert alert-success mt-3 mb-0">
+            <small>
+                ¡Todo listo! Confirmá para comenzar tu viaje.
+            </small>
+        </div>
 
     </div>
 
 </div>
 
-<!-- BICICLETAS DISPONIBLES -->
-<div id="contenedorBicicletas" class="d-none">
-
-    <hr>
-
-    <h6 class="fw-bold">
-        🚲 Bicicletas disponibles
-    </h6>
-
-    <p class="text-muted small">
-        Seleccioná una bicicleta de la estación elegida.
-    </p>
-
-    <div id="listaBicicletas">
-
-        <!-- Las bicicletas se cargarán dinámicamente desde Supabase -->
-
-    </div>
-
-</div>
-
-<!-- ESCANEO QR -->
-<div id="contenedorQR" class="d-none">
-
-    <hr>
-
-    <h6 class="fw-bold">
-        📷 Verificación de bicicleta
-    </h6>
-
-    <p class="mb-2">
-        Bicicleta seleccionada:
-        <strong id="codigoBicicletaSeleccionada">-</strong>
-    </p>
-
-        <button
-            type="button"
-            id="btnEscanearQR"
-            class="btn btn-success w-100">
-
-            Escanear código QR
-
-        </button>
-
-        <div
-        id="resultadoQR"
-        class="alert alert-secondary mt-3 mb-0 d-none">
-        </div>
-
-        <small
-        id="intentosQR"
-        class="text-muted d-block mt-2">
-        Intentos disponibles: 3
-        </small>
-
-        </div>
-        </div>
 
 <div id="contenedorPlanesMembresia">
     <hr>
@@ -618,28 +740,53 @@
 </div>
 
 
+           
             <div class="modal-footer">
 
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
+    <!-- Cancelar -->
+    <button
+        type="button"
+        class="btn btn-secondary"
+        data-bs-dismiss="modal">
 
-                    Cancelar
+        Cancelar
 
-                </button>
+    </button>
 
-                <button
-                    id="btnAlquilar"
-                    class="btn btn-success"
-                    onclick="rentBike()"
-                    disabled>
+    <!-- Volver al paso anterior -->
+    <button
+        type="button"
+        id="btnPasoAnterior"
+        class="btn btn-outline-secondary d-none">
 
-                    Confirmar Alquiler
+        Anterior
 
-                </button>
+    </button>
 
-            </div>
-            
+    <!-- Avanzar al siguiente paso -->
+    <button
+        type="button"
+        id="btnContinuarPaso"
+        class="btn btn-success"
+        disabled>
+
+        Continuar
+
+    </button>
+
+    <!-- Confirmar alquiler -->
+    <button
+        type="button"
+        id="btnAlquilar"
+        class="btn btn-success d-none"
+        onclick="rentBike()"
+        disabled>
+
+        Confirmar alquiler
+
+    </button>
+
+</div>
 
         </div>
 
@@ -937,7 +1084,7 @@
                 </div>
 
                 <div class="fs-1 mb-2">
-                    🚲
+                    <i class="bi bi-bicycle fs-4 text-white"></i>
                 </div>
 
                 <p class="fw-semibold mb-0">
@@ -961,7 +1108,7 @@
     <div class="row">
 
       <div class="col-lg-6 col-md-12 mb-4">
-        <h5 class="text-uppercase">🚲 P&L BIKE</h5>
+        <h5 class="text-uppercase"><i class="bi bi-bicycle fs-4 text-white"></i> P&L BIKE</h5>
         <p>
           Sistema de bicicletas urbanas de San Miguel de Tucumán.
           Movilidad sostenible, rápida y accesible.
@@ -1160,7 +1307,86 @@
     </div>
 
 </div>
-</body>
+
+
+
+<!-- Modal de escaneo QR -->
+<div class="modal fade" id="qrScannerModal" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrScannerModalLabel">
+                    Verificación de bicicleta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-3">
+                    Escaneá el código QR de la bicicleta seleccionada.
+                </p>
+                
+                            <div id="qrImagenContainer" class="d-flex justify-content-center mb-3 d-none">
+                            <div class="border rounded p-3 bg-white">
+                            <svg viewBox="0 0 210 210" width="210" height="210"
+                             xmlns="http://www.w3.org/2000/svg"
+                             shape-rendering="crispEdges">
+                            <rect width="210" height="210" fill="white"/>
+
+                            <!-- Esquinas de posicionamiento -->
+                            <g fill="black">
+                                <rect x="10" y="10" width="60" height="60"/>
+                                <rect x="20" y="20" width="40" height="40" fill="white"/>
+                                <rect x="30" y="30" width="20" height="20"/>
+
+                                <rect x="140" y="10" width="60" height="60"/>
+                                <rect x="150" y="20" width="40" height="40" fill="white"/>
+                                <rect x="160" y="30" width="20" height="20"/>
+
+                                <rect x="10" y="140" width="60" height="60"/>
+                                <rect x="20" y="150" width="40" height="40" fill="white"/>
+                                <rect x="30" y="160" width="20" height="20"/>
+
+                                <!-- Patrón central -->
+                                <path d="
+                                    M80 10h10v10H80z M100 10h10v10h-10z
+                                    M120 20h10v10h-10z M80 30h20v10H80z
+                                    M110 40h10v10h-10z M130 40h10v10h-10z
+                                    M80 50h10v10H80z M100 60h20v10h-20z
+                                    M80 80h10v10H80z M100 80h10v10h-10z
+                                    M120 80h20v10h-20z M160 80h10v10h-10z
+                                    M190 80h10v10h-10z M90 100h20v10H90z
+                                    M120 100h10v10h-10z M150 100h20v10h-20z
+                                    M180 100h10v10h-10z M80 120h10v10H80z
+                                    M100 120h10v10h-10z M130 120h20v10h-20z
+                                    M170 120h10v10h-10z M80 140h10v10H80z
+                                    M100 150h10v10h-10z M120 140h10v10h-10z
+                                    M140 150h10v10h-10z M160 140h10v10h-10z
+                                    M180 150h20v10h-20z M80 170h20v10H80z
+                                    M110 180h10v10h-10z M130 170h10v10h-10z
+                                    M150 180h10v10h-10z M180 180h10v10h-10z
+                                "/>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <p class="text-muted small">
+                    Bicicleta: <strong id="codigoBicicletaQRModal"></strong>
+                </p>
+
+                <div id="resultadoQRModal" class="alert d-none mt-3"></div>
+            </div>
+
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-success" id="btnValidarQRModal">
+                    Validar QR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1168,5 +1394,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+</body>
 
 </html>

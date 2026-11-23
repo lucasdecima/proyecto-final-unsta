@@ -263,6 +263,10 @@ function actualizarBotonRegistro() {
 // REGISTRO CON SUPABASE AUTH
 // ============================================
 
+// ============================================
+// REGISTRO CON SUPABASE AUTH
+// ============================================
+
 async function registrar() {
     if (!supabaseClient) {
         mostrarErrorConexion();
@@ -313,43 +317,49 @@ async function registrar() {
     boton.disabled = true;
 
     try {
-        const { data, error } =
-        await supabaseClient.auth.getSession();
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    nombre: nombre
+                }
+            }
+        });
 
-        if (error) {
-            console.error(
-                "Error al obtener la sesión de Supabase:",
-                error
-            );
-        
-            return false;
-        }
-
-        if (!data.session) {
-            usuarioAutenticado = null;
-            window.location.replace("login.html");
-            return false;
-        }
+        if (error) throw error;
 
         const mensaje = data.session
             ? "Tu cuenta fue creada correctamente. Ya podés iniciar sesión."
-            : "Tu cuenta fue creada. Revisá tu correo para confirmar el registro antes de iniciar sesión.";
+            : "Tu cuenta fue creada. Revisá tu correo electrónico para confirmar el registro antes de iniciar sesión.";
 
-        mostrarModal(
+        const modal = mostrarModal(
             "Registro exitoso",
             mensaje,
             "success"
         );
 
-        document
-            .getElementById("messageModal")
-            .addEventListener("hidden.bs.modal", () => {
-                window.location.href = "login.html";
-            }, { once: true });
+        if (modal) {
+            document.getElementById("messageModal").addEventListener(
+                "hidden.bs.modal",
+                () => {
+                    window.location.replace("login.html");
+                },
+                { once: true }
+            );
+        } else {
+            window.location.replace("login.html");
+        }
 
     } catch (error) {
         console.error("Error durante el registro:", error);
-        mostrarErrorConexion();
+
+        mostrarModal(
+            "No se pudo crear la cuenta",
+            traducirErrorAuth(error.message),
+            "danger"
+        );
+
     } finally {
         boton.disabled = !(
             nombreValido(document.getElementById("nombre").value.trim()) &&
@@ -358,6 +368,7 @@ async function registrar() {
         );
     }
 }
+
 
 // ============================================
 // TRADUCCIÓN DE ERRORES DE AUTENTICACIÓN
@@ -512,23 +523,23 @@ async function confirmarCerrarSesion() {
         if (supabaseClient) {
             const { error } = await supabaseClient.auth.signOut();
 
-            if (error) {
-                console.error("Error al cerrar sesión:", error);
-            }
+            if (error) throw error;
         }
 
         usuarioAutenticado = null;
-        window.location.href = "login.html";
+
+        window.location.replace("app.html");
 
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
+
         mostrarModal(
             "Error",
             "No se pudo cerrar la sesión correctamente. Intentá nuevamente.",
             "danger"
         );
     }
-}
+}s
 
 // ============================================
 // FONDO ANIMADO DE BICICLETAS
@@ -569,19 +580,21 @@ function crearFondoBicis() {
 }
 
 
-//============================================
-//  VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
-//============================================ 
-//============================================
-//  VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
-//============================================ 
+// ============================================
+// VERIFICACIÓN DE SESIÓN EN PÁGINAS PRIVADAS
+// ============================================
 
 async function verificarSesion() {
-    const esPaginaPrincipal =
-        window.location.pathname.endsWith("/index.html") ||
-        window.location.pathname.endsWith("/");
 
-    if (!esPaginaPrincipal) {
+    const rutaActual = window.location.pathname;
+
+    const esPaginaPrivada =
+    rutaActual.endsWith("/index.html") ||
+    rutaActual === "/" ||
+    rutaActual.endsWith("/");
+
+    // Las páginas públicas no requieren autenticación.
+    if (!esPaginaPrivada) {
         return true;
     }
 
@@ -641,6 +654,9 @@ async function verificarSesion() {
     }
 }
 
+
+
+
 // ============================================
 // INICIALIZACIÓN
 // ============================================
@@ -699,6 +715,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// ============================================
+// PROTECCIÓN AL VOLVER A UNA PÁGINA PRIVADA
+// ============================================
+
+window.addEventListener("pageshow", async (event) => {
+
+    const rutaActual = window.location.pathname;
+
+    const esPaginaPrivada =
+        rutaActual.endsWith("/index.html") ||
+        rutaActual === "/" ||
+        rutaActual.endsWith("/");
+
+    if (!esPaginaPrivada) return;
+
+    if (event.persisted) {
+        await verificarSesion();
+    }
+
+});
 
 
 // ============================================
@@ -760,7 +796,7 @@ async function actualizarPassword() {
                 "hidden.bs.modal",
                 async () => {
                     await supabaseClient.auth.signOut();
-                    window.location.href = "login.html";
+                    window.location.href = "app.html";
                 },
                 { once: true }
             );

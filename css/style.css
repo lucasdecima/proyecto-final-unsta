@@ -430,3 +430,418 @@ footer .text-center.p-3{
         transform: scale(1);
     }
 }
+
+
+
+/* ==========================================
+   FLUJO DE ALQUILER POR PASOS
+========================================== */
+
+.paso-indicador {
+    color: #999;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.paso-indicador.activo,
+.paso-indicador.completado {
+    color: #198754;
+    font-weight: 600;
+}
+
+.paso-numero {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #ced4da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 5px;
+    background-color: white;
+}
+
+.paso-indicador.activo .paso-numero,
+.paso-indicador.completado .paso-numero {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+}
+
+.paso-alquiler {
+    animation: aparecerPaso 0.2s ease-in-out;
+}
+
+@keyframes aparecerPaso {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#listaBicicletas .col-bicicleta {
+    display: flex;
+}
+
+#listaBicicletas .bicicleta-tarjeta {
+    width: 100%;
+    min-height: 95px;
+    border: 1px solid #198754;
+    border-radius: 10px;
+    background-color: white;
+    color: #198754;
+    transition: all 0.2s ease;
+}
+
+#listaBicicletas .bicicleta-tarjeta:hover {
+    background-color: #eaf5ef;
+}
+
+#listaBicicletas .bicicleta-tarjeta.active {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+}
+
+
+
+
+/* ==========================================
+   NUEVA PÁGINA INICIAL P&L BIKE
+========================================== */
+
+.home-page {
+    background-color: var(--pl-cream);
+}
+
+/* PORTADA */
+
+.hero-bike {
+    position: relative;
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(15, 48, 37, 0.94) 0%,
+            rgba(15, 48, 37, 0.78) 48%,
+            rgba(15, 48, 37, 0.12) 100%
+        ),
+        url("https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&w=1800&q=85")
+        center 55% / cover no-repeat;
+    color: white;
+}
+
+.hero-content {
+    padding-top: 75px;
+    padding-bottom: 75px;
+}
+
+.hero-etiqueta {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--pl-amber);
+    margin-bottom: 20px;
+}
+
+.hero-bike h1 {
+    color: white;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    max-width: 650px;
+}
+
+.hero-bike h1 span {
+    color: var(--pl-amber);
+}
+
+.hero-bike p {
+    max-width: 520px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.88);
+    margin-top: 20px;
+    margin-bottom: 28px;
+}
+
+.hero-bike .btn {
+    border-radius: 50px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+
+.hero-detalle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+
+/* ESTADÍSTICAS */
+
+.estadisticas-bike {
+    position: relative;
+    margin-top: -35px;
+    z-index: 2;
+}
+
+.estadistica-card {
+    height: 100%;
+    background: white;
+    padding: 25px 12px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(31, 111, 84, 0.10);
+    transition: transform 0.25s ease;
+}
+
+.estadistica-card:hover {
+    transform: translateY(-5px);
+}
+
+.estadistica-icono {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.estadistica-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+.estadistica-card p {
+    color: #777;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+
+/* SECCIONES GENERALES */
+
+.seccion-home {
+    padding-top: 75px;
+    padding-bottom: 75px;
+}
+
+.seccion-titulo {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.seccion-titulo span {
+    color: var(--pl-amber-dark);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.seccion-titulo h2 {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.seccion-titulo p {
+    color: #707a74;
+    max-width: 650px;
+    margin: auto;
+    line-height: 1.6;
+}
+
+
+/* MAPA */
+
+.mapa-contenedor {
+    padding: 12px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(31, 111, 84, 0.10);
+}
+
+#mapa {
+    border: none;
+    border-radius: 12px;
+}
+
+
+/* ESTACIONES */
+
+.seccion-estaciones {
+    background: #edf3ee;
+    padding: 75px 0;
+}
+
+.estacion-info-card {
+    height: 100%;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid #e5ece6;
+    transition: all 0.25s ease;
+}
+
+.estacion-info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(31, 111, 84, 0.12);
+    border-color: var(--pl-pine);
+}
+
+.estacion-info-card > span {
+    font-size: 2rem;
+}
+
+.estacion-info-card h5 {
+    color: var(--pl-pine-dark);
+    font-weight: 700;
+    margin-top: 15px;
+}
+
+.estacion-info-card p {
+    color: #78817b;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+
+/* PLANES EN HOME */
+
+.plan-home-card {
+    height: 100%;
+    background: white;
+    padding: 35px 25px;
+    text-align: center;
+    border-radius: 20px;
+    border: 2px solid #e6eae6;
+    transition: all 0.25s ease;
+}
+
+.plan-home-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(31, 111, 84, 0.12);
+}
+
+.plan-home-quincenal {
+    border-color: #adb5bd;
+}
+
+.plan-home-mensual {
+    border-color: #d4af37;
+}
+
+.plan-home-icono {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.plan-home-card h4 {
+    color: var(--pl-pine-dark);
+    font-weight: 700;
+}
+
+.plan-home-card h2 {
+    font-size: 2.5rem;
+    margin-top: 20px;
+}
+
+.plan-home-card p {
+    margin-bottom: 10px;
+}
+
+
+/* CÓMO FUNCIONA */
+
+.como-funciona {
+    background: white;
+    padding: 75px 0;
+}
+
+.paso-home {
+    height: 100%;
+    padding: 25px 20px;
+}
+
+.paso-home > div {
+    width: 75px;
+    height: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: #eaf4ed;
+    font-size: 2.2rem;
+}
+
+.paso-home h5 {
+    color: var(--pl-pine-dark);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.paso-home p {
+    color: #707a74;
+    line-height: 1.6;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 767px) {
+
+    .hero-bike {
+        min-height: 480px;
+        background-position: 62% center;
+    }
+
+    .hero-content {
+        padding-top: 65px;
+        padding-bottom: 75px;
+    }
+
+    .hero-bike h1 {
+        font-size: 2.7rem;
+    }
+
+    .hero-bike p {
+        font-size: 1rem;
+    }
+
+    .estadistica-card {
+        padding: 20px 8px;
+    }
+
+    .estadistica-card h2 {
+        font-size: 1.5rem;
+    }
+
+    .seccion-home,
+    .seccion-estaciones,
+    .como-funciona {
+        padding-top: 50px;
+        padding-bottom: 50px;
+    }
+
+}
+
+.icono-bicicleta {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Bicicleta blanca sobre fondos verdes */
+.icono-bicicleta-blanca {
+    color: #ffffff;
+}

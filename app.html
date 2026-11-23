@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>P&L BIKE</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+
+<body>
+
+    <!-- Navbar pública -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+            <div class="container">
+            
+                <a class="navbar-brand fw-bold" href="app.html">
+                    <i class="bi bi-bicycle"></i> P&L BIKE
+                </a>
+            
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            
+                <div class="collapse navbar-collapse" id="menu">
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                    
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#home">
+                                Inicio
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="#mapa">
+                                Estaciones
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item ms-lg-3">
+                            <a href="login.html" class="btn btn-outline-light">
+                                Iniciar sesión
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                            <a href="register.html" class="btn btn-light text-success">
+                                Registrarse
+                            </a>
+                        </li>
+                    
+                    </ul>
+                </div>
+            
+            </div>
+    </nav>
+
+ 
+<!-- HOME -->
+<div id="home" class="home-page">
+
+    <!-- PORTADA PRINCIPAL -->
+    <section class="hero-bike">
+        <div class="container">
+            <div class="row align-items-center min-vh-50">
+
+                <div class="col-lg-7 hero-content">
+                    <span class="hero-etiqueta">
+                        MOVILIDAD URBANA · SAN MIGUEL DE TUCUMÁN
+                    </span>
+
+                    <h1>
+                        Movete por la ciudad
+                        <span>a tu ritmo.</span>
+                    </h1>
+
+                    <p>
+                        Descubrí una forma más simple, saludable y
+                        sostenible de recorrer San Miguel de Tucumán.
+                        Elegí tu bicicleta y comenzá el viaje.
+                    </p>
+
+                    <a href="login.html"
+                        class="btn btn-success btn-lg px-5 d-inline-flex align-items-center gap-2">
+
+                        <i class="bi bi-bicycle fs-4 text-white"></i>
+                        Alquilar bicicleta
+
+                        </a>
+
+                    <div class="hero-detalle mt-3">
+                        <span>✓ Fácil de usar</span>
+                        <span>✓ Movilidad sostenible</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ESTADÍSTICAS -->
+    <section class="container estadisticas-bike">
+
+        <div class="row g-3">
+
+            <div class="col-6 col-md-3">
+                <div class="estadistica-card">
+                    <div class="estadistica-icono"><i class="bi bi-bicycle"></i></div>
+                    <h2>30</h2>
+                    <p>Bicicletas</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="estadistica-card">
+                    <div class="estadistica-icono">📍</div>
+                    <h2>7</h2>
+                    <p>Estaciones</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="estadistica-card">
+                    <div class="estadistica-icono">🌱</div>
+                    <h2>Eco</h2>
+                    <p>Movilidad sustentable</p>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="estadistica-card">
+                    <div class="estadistica-icono">⏱️</div>
+                    <h2>1 hora</h2>
+                    <p>Por viaje</p>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- MAPA DE ESTACIONES -->
+    <section class="container seccion-home">
+
+        <div class="seccion-titulo">
+            <span>DESCUBRÍ TU CIUDAD</span>
+            <h2>Encontrá tu próxima estación</h2>
+            <p>
+                Explorá los puntos de retiro y devolución de bicicletas
+                distribuidos por San Miguel de Tucumán.
+            </p>
+        </div>
+
+        <div class="mapa-contenedor">
+            <div id="mapa"></div>
+        </div>
+
+        <p class="text-muted small mt-3 text-center">
+            Consultá el mapa para conocer la disponibilidad de bicicletas
+                en cada estación.
+        </p>
+
+    </section>
+
+
+    <!-- ESTACIONES -->
+    <section class="seccion-estaciones">
+
+        <div class="container">
+
+            <div class="seccion-titulo">
+                <span>SIEMPRE CERCA</span>
+                <h2>Nuestras estaciones</h2>
+                <p>
+                    Siete puntos estratégicos para conectar distintos
+                    sectores de la ciudad.
+                </p>
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>📍</span>
+                        <h5>Plaza Independencia</h5>
+                        <p>Centro de la ciudad</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🌳</span>
+                        <h5>Parque 9 de Julio</h5>
+                        <p>Espacios verdes y recreación</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🚌</span>
+                        <h5>Terminal de Ómnibus</h5>
+                        <p>Conexión con el transporte</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🌿</span>
+                        <h5>Parque Avellaneda</h5>
+                        <p>Un punto para recorrer la ciudad</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🏛️</span>
+                        <h5>Plaza Urquiza</h5>
+                        <p>Zona norte de la ciudad</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🌳</span>
+                        <h5>Plaza Yrigoyen</h5>
+                        <p>Un nuevo punto de conexión</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="estacion-info-card">
+                        <span>🌱</span>
+                        <h5>Plaza San Martín</h5>
+                        <p>Un espacio para moverse mejor</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+<!-- INFORMACIÓN DE MEMBRESÍAS -->
+<section class="container seccion-home">
+
+    <div class="seccion-titulo">
+        <span>ELEGÍ TU EXPERIENCIA</span>
+        <h2>Nuestras membresías</h2>
+        <p>Conocé las opciones disponibles para disfrutar P&L BIKE.</p>
+    </div>
+
+    <div class="row g-3 justify-content-center">
+
+        <!-- MEMBRESÍA QUINCENAL -->
+        <div class="col-12 col-md-6">
+            <div class="card plan-card plan-plateado h-100">
+                <div class="card-body text-center p-4">
+
+                    <div class="plan-icon mb-2">🥈</div>
+
+                    <h5 class="fw-bold">MEMBRESÍA QUINCENAL</h5>
+
+                    <h2 class="fw-bold mb-0">$13.000</h2>
+                    <p class="text-muted mb-3">ARS cada 15 días</p>
+
+                    <hr>
+
+                    <p class="mb-2">Cantidad ilimitada de viajes.</p>
+                    <p class="text-muted small mb-3">
+                        Hasta 8 horas de uso por día.
+                    </p>
+
+                    
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MEMBRESÍA MENSUAL -->
+        <div class="col-12 col-md-6">
+            <div class="card plan-card plan-dorado h-100">
+                <div class="card-body text-center p-4">
+
+                    <div class="plan-icon mb-2">🥇</div>
+
+                    <h5 class="fw-bold">MEMBRESÍA MENSUAL</h5>
+
+                    <h2 class="fw-bold mb-0">$20.000</h2>
+                    <p class="text-muted mb-3">ARS cada 30 días</p>
+
+                    <hr>
+
+                    <p class="mb-2">Cantidad ilimitada de viajes.</p>
+                    <p class="text-muted small mb-3">
+                        Hasta 8 horas de uso por día.
+                    </p>
+
+                    
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+    <!-- CÓMO FUNCIONA -->
+    <section class="como-funciona">
+
+        <div class="container">
+
+            <div class="seccion-titulo">
+                <span>ES MUY SIMPLE</span>
+                <h2>¿Cómo funciona P&L BIKE?</h2>
+            </div>
+
+            <div class="row g-4 text-center">
+
+                <div class="col-md-4">
+                    <div class="paso-home">
+                        <div>📍</div>
+                        <h5>1. Elegí una estación</h5>
+                        <p>
+                            Buscá la estación más cercana y consultá
+                            las bicicletas disponibles.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="paso-home">
+                        <div><i class="bi bi-bicycle"></i></div>
+                        <h5>2. Alquilá tu bicicleta</h5>
+                        <p>
+                            Seleccioná una bicicleta y completá
+                            el proceso de alquiler.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="paso-home">
+                        <div>🌱</div>
+                        <h5>3. Disfrutá el recorrido</h5>
+                        <p>
+                            Movete por la ciudad y devolvé la bicicleta
+                            en una de nuestras estaciones.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<footer class="bg-success text-white text-center mt-auto">
+    
+  <div class="container p-4">
+
+    <div class="row">
+
+      <div class="col-lg-6 col-md-12 mb-4">
+        <h5 class="text-uppercase"><i class="bi bi-bicycle"></i> P&L BIKE</h5>
+        <p>
+          Sistema de bicicletas urbanas de San Miguel de Tucumán.
+          Movilidad sostenible, rápida y accesible.
+        </p>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-4">
+    <h5 class="text-uppercase">Secciones</h5>
+
+    <ul class="list-unstyled mb-0">
+        <li>
+            <a href="#home" class="text-white">
+                Inicio
+            </a>
+        </li>
+
+        <li>
+            <a href="#mapa" class="text-white">
+                Estaciones
+            </a>
+        </li>
+
+        <li>
+            <a href="login.html" class="text-white">
+                Iniciar sesión
+            </a>
+        </li>
+
+        <li>
+            <a href="register.html" class="text-white">
+                Registrarse
+            </a>
+        </li>
+    </ul>
+    </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contacto</h5>
+
+                    <ul class="list-unstyled">
+                    <li>Email: plbike@demo.com</li>
+                    <li>Tucumán, Argentina</li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="text-center p-3 bg-dark">
+          © 2026 P&L BIKE - Todos los derechos reservados
+        </div>
+    </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/app.js"></script>
+
+    </body>
+
+</html>

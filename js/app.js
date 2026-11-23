@@ -8,6 +8,12 @@ let tipoPlanSeleccionado = null;
 let cargosPendientes = [];
 let intentosVerificacionUbicacion = 0;
 let ubicacionVerificada = false;
+let bicicletaSeleccionada = null;
+let qrVerificado = false;
+let intentosQRPorBicicleta = {};
+let pasoAlquilerActual = 1;
+
+
 
 const PLANES_MEMBRESIA = {
     quincenal: {
@@ -21,6 +27,35 @@ const PLANES_MEMBRESIA = {
         importe: 20000
     }
 };
+
+
+function iconoBicicleta(clase = "") {
+    return `
+        <svg
+            class="icono-bicicleta ${clase}"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 40"
+            width="28"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="13" cy="27" r="9"/>
+            <circle cx="51" cy="27" r="9"/>
+            <path d="M13 27 L23 11 L34 27 L13 27"/>
+            <path d="M23 11 L40 11 L51 27"/>
+            <path d="M34 27 L40 11"/>
+            <path d="M19 11 H27"/>
+            <path d="M37 7 H43"/>
+        </svg>
+    `;
+}
+
+
 
 function seleccionarPlan(tipo) {
 
@@ -133,6 +168,10 @@ function verificarUbicacion() {
             "Primero seleccioná una estación de origen.";
 
         estado.className = "alert alert-warning mt-2 mb-0";
+
+        ubicacionVerificada = false;
+        document.getElementById("btnContinuarPaso").disabled = true;
+
         return;
     }
 
@@ -140,11 +179,15 @@ function verificarUbicacion() {
     const coordenadas = coordenadasEstaciones[origen];
 
     if (!coordenadas) {
-        estado.textContent =
-            "No encontramos las coordenadas de esta estación. Intentá nuevamente.";
+    estado.textContent =
+        "No encontramos las coordenadas de esta estación. Intentá nuevamente.";
 
-        estado.className = "alert alert-danger mt-2 mb-0";
-        return;
+    estado.className = "alert alert-danger mt-2 mb-0";
+
+    ubicacionVerificada = false;
+    document.getElementById("btnContinuarPaso").disabled = true;
+
+    return;
     }
 
     boton.disabled = true;
@@ -157,6 +200,8 @@ function verificarUbicacion() {
 
     // Contar el intento de verificación.
     intentosVerificacionUbicacion++;
+
+    document.getElementById("btnContinuarPaso").disabled = true;
 
     const intento = intentosVerificacionUbicacion;
 
@@ -214,11 +259,18 @@ function verificarUbicacion() {
         ubicacionVerificada = true;
 
         estado.textContent =
-            "¡Ubicación verificada correctamente! Ya podés continuar.";
+            "¡Ubicación verificada correctamente! Avanzando al siguiente paso...";
 
         estado.className = "alert alert-success mt-2 mb-0";
 
         console.log("Verificación exitosa en el intento:", intento);
+
+        // Avanzar automáticamente al paso 2.
+        setTimeout(() => {
+            if (ubicacionVerificada) {
+                avanzarPasoAlquiler();
+            }
+        }, 1200);
     }
 
     boton.disabled = false;
@@ -229,6 +281,303 @@ function verificarUbicacion() {
 }
 
 
+function limpiarSeleccionBicicleta() {
+    bicicletaSeleccionada = null;
+    qrVerificado = false;
+
+    document.getElementById("contenedorBicicletas").classList.add("d-none");
+    document.getElementById("listaBicicletas").innerHTML = "";
+    document.getElementById("contenedorQR").classList.add("d-none");
+
+    const resultado = document.getElementById("resultadoQR");
+    resultado.className = "alert d-none mt-2";
+    resultado.textContent = "";
+
+    const botonQR = document.getElementById("btnEscanearQR");
+    botonQR.disabled = false;
+    botonQR.innerHTML = "Escanear QR";
+
+    document.getElementById("btnAlquilar").disabled = true;
+}
+
+function mostrarBicicletasDisponibles() {
+    const origen = document.getElementById("origen").value;
+
+    const contenedor = document.getElementById("contenedorBicicletas");
+    const lista = document.getElementById("listaBicicletas");
+
+    const estacion = estaciones[origen];
+
+    lista.innerHTML = "";
+    bicicletaSeleccionada = null;
+    qrVerificado = false;
+
+    document.getElementById("contenedorQR").classList.add("d-none");
+    document.getElementById("btnAlquilar").disabled = true;
+    document.getElementById("btnContinuarPaso").disabled = true;
+
+    if (!estacion || !estacion.bicicletas || estacion.bicicletas.length === 0) {
+        contenedor.classList.add("d-none");
+
+        mostrarMensaje(
+            "Sin bicicletas disponibles",
+            "La estación seleccionada no tiene bicicletas disponibles. Elegí otra estación.",
+            "warning"
+        );
+
+        return;
+    }
+
+    estacion.bicicletas.forEach(bicicleta => {
+        const boton = document.createElement("button");
+
+        boton.type = "button";
+        boton.className =
+        "btn btn-outline-success w-100 text-start mb-2 bicicleta-item";
+        boton.innerHTML =
+        `${iconoBicicleta("me-2")} ${bicicleta.codigo}`;
+
+        boton.addEventListener("click", () => {
+            seleccionarBicicleta(bicicleta);
+        });
+
+        lista.appendChild(boton);
+    });
+
+    contenedor.classList.remove("d-none");
+}
+
+function seleccionarBicicleta(bicicleta) {
+    bicicletaSeleccionada = bicicleta;
+    qrVerificado = false;
+
+    document.getElementById("btnContinuarPaso").disabled = true;
+
+    const botonQR = document.getElementById("btnEscanearQR");
+    botonQR.disabled = false;
+    botonQR.innerHTML = "Escanear código QR";
+
+    // Inicializar contador para esta bicicleta si todavía no existe
+    if (intentosQRPorBicicleta[bicicleta.id] === undefined) {
+        intentosQRPorBicicleta[bicicleta.id] = 0;
+    }
+
+    // Marcar visualmente la bicicleta seleccionada
+    document.querySelectorAll("#listaBicicletas .bicicleta-item")
+    .forEach(elemento => {
+        elemento.classList.remove(
+            "active",
+            "border-success",
+            "btn-success",
+            "text-white"
+        );
+
+        elemento.classList.add("btn-outline-success");
+    });
+
+    const botonSeleccionado = [...document.querySelectorAll("#listaBicicletas button")]
+        .find(boton => boton.textContent.includes(bicicleta.codigo));
+
+    if (botonSeleccionado) {
+        botonSeleccionado.classList.add("active", "border-success");
+    }
+
+    // Mostrar código de bicicleta
+    document.getElementById("codigoBicicletaSeleccionada").textContent =
+        bicicleta.codigo;
+
+    // Mostrar sección QR
+    document.getElementById("contenedorQR").classList.remove("d-none");
+
+    // Reiniciar resultado visual
+    const resultado = document.getElementById("resultadoQR");
+    resultado.className = "alert d-none mt-2";
+    resultado.textContent = "";
+
+    // Actualizar intentos disponibles
+    actualizarIntentosQR();
+
+    // Deshabilitar confirmación hasta completar las validaciones
+    document.getElementById("btnAlquilar").disabled = true;
+
+    console.log("Bicicleta seleccionada:", bicicleta);
+}
+
+function actualizarIntentosQR() {
+    if (!bicicletaSeleccionada) return;
+
+    const intentosRealizados =
+        intentosQRPorBicicleta[bicicletaSeleccionada.id] || 0;
+
+    const disponibles = 3 - intentosRealizados;
+
+    document.getElementById("intentosQR").textContent =
+        `Intentos disponibles: ${disponibles}`;
+}
+
+
+function escanearQR() {
+    if (!bicicletaSeleccionada || qrVerificado) return;
+
+    const intentosRealizados =
+        intentosQRPorBicicleta[bicicletaSeleccionada.id] || 0;
+
+    if (intentosRealizados >= 3) return;
+
+    document.getElementById("codigoBicicletaQRModal").textContent =
+        bicicletaSeleccionada.codigo;
+
+    const resultado = document.getElementById("resultadoQRModal");
+    resultado.className = "alert d-none mt-3";
+    resultado.textContent = "";
+
+    document.getElementById("qrImagenContainer")
+    .classList.add("d-none");
+
+    const botonValidar = document.getElementById("btnValidarQRModal");
+    botonValidar.disabled = false;
+    botonValidar.innerHTML = "Validar QR";
+
+    bootstrap.Modal.getOrCreateInstance(
+        document.getElementById("qrScannerModal")
+    ).show();
+}
+
+
+
+function validarQRPopup() {
+    if (!bicicletaSeleccionada || qrVerificado) return;
+
+    const bicicleta = bicicletaSeleccionada;
+    const boton = document.getElementById("btnValidarQRModal");
+    const resultado = document.getElementById("resultadoQRModal");
+    const imagenQR = document.getElementById("qrImagenContainer");
+
+    const intentosRealizados =
+        intentosQRPorBicicleta[bicicleta.id] || 0;
+
+    if (intentosRealizados >= 3) return;
+
+    // Mostrar la imagen QR y ocultar resultados anteriores.
+    imagenQR.classList.remove("d-none");
+
+    resultado.className = "alert d-none mt-3";
+    resultado.textContent = "";
+
+    boton.disabled = true;
+    boton.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Escaneando...';
+
+    // Simular el escaneo durante 5 segundos.
+    setTimeout(() => {
+
+        // Ocultar la imagen antes de mostrar el resultado.
+        imagenQR.classList.add("d-none");
+
+        const lecturaCorrecta = Math.random() < 0.75;
+
+        intentosQRPorBicicleta[bicicleta.id] =
+            (intentosQRPorBicicleta[bicicleta.id] || 0) + 1;
+
+        const codigoLeido = lecturaCorrecta
+            ? bicicleta.qr_codigo
+            : "QR-INVALIDO";
+
+        if (codigoLeido && codigoLeido === bicicleta.qr_codigo) {
+
+            qrVerificado = true;
+
+            resultado.className = "alert alert-success mt-3";
+            resultado.textContent =
+                "¡Código QR verificado correctamente!";
+
+            boton.innerHTML = "✓ Verificado";
+
+            document.getElementById("btnEscanearQR").innerHTML =
+                "✓ QR verificado";
+
+            document.getElementById("btnEscanearQR").disabled = true;
+
+            actualizarIntentosQR();
+
+        setTimeout(() => {
+        
+            bootstrap.Modal.getOrCreateInstance(
+                document.getElementById("qrScannerModal")
+            ).hide();
+        
+            const resultadoPrincipal =
+                document.getElementById("resultadoQR");
+        
+            resultadoPrincipal.className =
+                "alert alert-success mt-2";
+        
+            resultadoPrincipal.textContent =
+                `¡QR verificado! Bicicleta ${bicicleta.codigo} identificada.`;
+        
+            // Habilitar la continuación y avanzar automáticamente al paso 3.
+            document.getElementById("btnContinuarPaso").disabled = false;
+        
+            avanzarPasoAlquiler();
+        
+        }, 1200);
+
+        } else {
+
+            const intentosActuales =
+                intentosQRPorBicicleta[bicicleta.id];
+
+            actualizarIntentosQR();
+
+            if (intentosActuales >= 3) {
+
+                resultado.className = "alert alert-danger mt-3";
+                resultado.textContent =
+                    "Se agotaron los 3 intentos. Deberás seleccionar otra bicicleta.";
+
+                boton.innerHTML = "Intentos agotados";
+
+                setTimeout(() => {
+
+                    bootstrap.Modal.getOrCreateInstance(
+                        document.getElementById("qrScannerModal")
+                    ).hide();
+
+                    setTimeout(() => {
+
+                        bicicletaSeleccionada = null;
+                        qrVerificado = false;
+
+                        document.getElementById("btnContinuarPaso").disabled = true;
+
+                        document.getElementById("contenedorQR")
+                            .classList.add("d-none");
+
+                        mostrarBicicletasDisponibles();
+
+                    }, 300);
+
+                }, 1500);
+
+            } else {
+
+                resultado.className = "alert alert-warning mt-3";
+                resultado.textContent =
+                    `No se pudo validar el QR. Intento ${intentosActuales} de 3. Podés volver a intentar.`;
+
+                boton.disabled = false;
+                boton.innerHTML = "↻ Volver a validar";
+            }
+        }
+
+        console.log("Resultado de validación QR:", {
+            bicicleta: bicicleta.codigo,
+            intentos: intentosQRPorBicicleta[bicicleta.id],
+            verificado: qrVerificado
+        });
+
+    }, 5000);
+}
 
 //======================================================
 // PAGO SIMULADO DE MEMBRESÍA
@@ -499,7 +848,9 @@ function actualizarMarcadoresMapa() {
             className: "marcador-bici-wrapper",
             html: `
                 <div class="marcador-bici-contenido ${estado.cardClase}">
-                    <span class="marcador-bici-icono">🚲</span>
+                    <span class="marcador-bici-icono">
+                        ${iconoBicicleta()}
+                    </span>
                     <span class="marcador-bici-cantidad">${cantidad}</span>
                 </div>
             `,
@@ -516,7 +867,10 @@ function actualizarMarcadoresMapa() {
             <div class="text-center">
                 <strong>${nombre}</strong>
                 <hr class="my-2">
-                <div>🚲 ${cantidad} bicicletas disponibles</div>
+                <div>
+                    ${iconoBicicleta("me-1")}
+                    ${cantidad} bicicletas disponibles
+                </div>
                 <div>${estado.texto}</div>
             </div>
         `);
@@ -547,6 +901,149 @@ const distancias = {
         "Parque 9 de Julio": 4.1
     }
 };
+
+//======================================================
+// NAVEGACIÓN DEL FLUJO DE ALQUILER
+//======================================================
+
+function mostrarPasoAlquiler(paso) {
+
+    pasoAlquilerActual = paso;
+
+    // Mostrar únicamente el paso correspondiente.
+    for (let i = 1; i <= 3; i++) {
+        document.getElementById(`pasoAlquiler${i}`)
+            .classList.toggle("d-none", i !== paso);
+    }
+
+    // Actualizar indicadores.
+    for (let i = 1; i <= 3; i++) {
+        const indicador = document.getElementById(`indicadorPaso${i}`);
+
+        indicador.classList.toggle("activo", i === paso);
+        indicador.classList.toggle("completado", i < paso);
+    }
+
+    // Actualizar barra de progreso.
+    document.getElementById("barraProgresoAlquiler").style.width =
+        `${paso * 33.33}%`;
+
+    // Mostrar u ocultar botones.
+    const anterior = document.getElementById("btnPasoAnterior");
+    const continuar = document.getElementById("btnContinuarPaso");
+    const confirmar = document.getElementById("btnAlquilar");
+
+    anterior.classList.toggle("d-none", paso === 1);
+    continuar.classList.toggle("d-none", paso === 3);
+    confirmar.classList.toggle("d-none", paso !== 3);
+
+    // Habilitar los botones según las validaciones.
+    if (paso === 1) {
+        continuar.disabled = !ubicacionVerificada;
+    }
+
+    if (paso === 2) {
+        continuar.disabled = !(
+            bicicletaSeleccionada && qrVerificado
+        );
+    }
+
+    if (paso === 3) {
+        confirmar.disabled = !(
+            bicicletaSeleccionada && qrVerificado
+        );
+
+        actualizarResumenAlquiler();
+    }
+}
+
+
+function avanzarPasoAlquiler() {
+
+    if (pasoAlquilerActual === 1) {
+
+        if (!ubicacionVerificada) {
+            mostrarModal(
+                "Ubicación no verificada",
+                "Primero necesitás verificar tu ubicación para continuar.",
+                "warning"
+            );
+            return;
+        }
+
+        // Cargar las bicicletas de la estación seleccionada.
+        mostrarBicicletasDisponibles();
+
+        if (!estaciones[document.getElementById("origen").value]
+            ?.bicicletas?.length) {
+            return;
+        }
+
+        mostrarPasoAlquiler(2);
+        return;
+    }
+
+    if (pasoAlquilerActual === 2) {
+
+        if (!bicicletaSeleccionada || !qrVerificado) {
+            mostrarModal(
+                "Verificación pendiente",
+                "Seleccioná una bicicleta y verificá su código QR para continuar.",
+                "warning"
+            );
+            return;
+        }
+
+        mostrarPasoAlquiler(3);
+    }
+}
+
+
+function retrocederPasoAlquiler() {
+
+    if (pasoAlquilerActual === 2) {
+        mostrarPasoAlquiler(1);
+        return;
+    }
+
+    if (pasoAlquilerActual === 3) {
+        mostrarPasoAlquiler(2);
+    }
+}
+
+
+function actualizarResumenAlquiler() {
+
+    if (!bicicletaSeleccionada) return;
+
+    const origen = document.getElementById("origen").value;
+
+    document.getElementById("resumenBicicleta").textContent =
+        bicicletaSeleccionada.codigo;
+
+    document.getElementById("resumenEstacion").textContent =
+        origen;
+
+    // Consultar el plan vigente para mostrarlo en el resumen.
+    consultarMembresiaActiva()
+        .then(membresia => {
+
+            const nombrePlan =
+                PLANES_MEMBRESIA[membresia?.tipo_plan]?.nombre;
+
+            document.getElementById("resumenMembresia").textContent =
+                nombrePlan || "Membresía activa";
+
+        })
+        .catch(error => {
+            console.error("Error al consultar la membresía:", error);
+
+            document.getElementById("resumenMembresia").textContent =
+                "Membresía activa";
+        });
+}
+
+
 
 //======================================================
 // FUNCIONES DE NAVEGACIÓN
@@ -598,7 +1095,7 @@ async function cargarEstacionesDesdeSupabase() {
     const { data: bicicletasDB, error: errorBicicletas } =
         await supabaseClient
             .from("bicicletas")
-            .select("id, codigo, estacion_id, estado");
+            .select("id, codigo, estacion_id, estado, qr_codigo")
 
     if (errorBicicletas) {
         throw errorBicicletas;
@@ -646,7 +1143,9 @@ async function cargarEstacionesDesdeSupabase() {
 
         estacionActual.bicicletas.push({
             id: bicicleta.id,
-            codigo: bicicleta.codigo
+            codigo: bicicleta.codigo,
+            qr_codigo: bicicleta.qr_codigo
+
         });
 
         estacionActual.bicis =
@@ -792,23 +1291,87 @@ function actualizarDistancia() {
 // ALQUILER DE BICICLETAS
 //======================================================
 
+function actualizarBotonAlquiler() {
+
+    const boton = document.getElementById("btnAbrirAlquiler");
+
+    if (!boton) return;
+
+    if (viajeActivo) {
+
+        boton.disabled = true;
+        boton.textContent = "Alquiler en curso";
+        boton.title = "Primero debés devolver la bicicleta actual.";
+
+    } else {
+
+        boton.disabled = false;
+        boton.textContent = "Alquilar Bicicleta";
+        boton.title = "";
+
+    }
+}
+
+
+
 
 async function rentBike() {
 
-        // Verificar si el usuario tiene un viaje pendiente de devolución.
+    const boton = document.getElementById("btnAlquilar");
+
+    // 1. Verificar que no exista un viaje activo.
     if (viajeActivo) {
         mostrarModal(
             "Viaje pendiente de devolución",
             "Tenés una bicicleta pendiente de devolución. Finalizá tu viaje actual antes de iniciar otro alquiler.",
             "warning"
         );
-
         return false;
     }
 
+    // 2. Validar estación de origen.
+    const origen = document.getElementById("origen").value;
 
+    if (!origen || !estaciones[origen]) {
+        mostrarModal(
+            "Seleccioná una estación",
+            "Debés seleccionar una estación de origen.",
+            "warning"
+        );
+        return false;
+    }
 
-    // Verificar si el usuario tiene una membresía activa.
+    // 3. Validar ubicación.
+    if (!ubicacionVerificada) {
+        mostrarModal(
+            "Ubicación no verificada",
+            "Primero necesitás verificar tu ubicación en la estación seleccionada.",
+            "warning"
+        );
+        return false;
+    }
+
+    // 4. Validar bicicleta seleccionada.
+    if (!bicicletaSeleccionada) {
+        mostrarModal(
+            "Seleccioná una bicicleta",
+            "Elegí una bicicleta disponible para continuar.",
+            "warning"
+        );
+        return false;
+    }
+
+    // 5. Validar QR.
+    if (!qrVerificado || !bicicletaSeleccionada.qr_codigo) {
+        mostrarModal(
+            "QR no verificado",
+            "Necesitás verificar el código QR de la bicicleta antes de confirmar el alquiler.",
+            "warning"
+        );
+        return false;
+    }
+
+    // 6. Consultar membresía activa.
     let membresia;
 
     try {
@@ -826,68 +1389,22 @@ async function rentBike() {
         return false;
     }
 
-    // Si no tiene membresía, debe comprar una antes de alquilar.
     if (!membresia) {
-
-        if (!tipoPlanSeleccionado ||
-            !PLANES_MEMBRESIA[tipoPlanSeleccionado]) {
-
-            mostrarModal(
-                "Seleccioná una membresía",
-                "Para alquilar una bicicleta necesitás una membresía activa. Elegí el plan quincenal o mensual para continuar.",
-                "warning"
-            );
-
-            return false;
-        }
-
-        // Actualizar los datos del modal de pago.
-        seleccionarPlan(tipoPlanSeleccionado);
-
-        // Cerrar el modal de alquiler antes de abrir el de pago.
-        const rentModalElement =
-            document.getElementById("rentBikeModal");
-
-        const rentModal =
-            bootstrap.Modal.getInstance(rentModalElement);
-
-        if (rentModal) {
-            const modalCerrado = new Promise(resolve => {
-                rentModalElement.addEventListener(
-                    "hidden.bs.modal",
-                    resolve,
-                    { once: true }
-                );
-            });
-
-            rentModal.hide();
-            await modalCerrado;
-        }
-
-        // Abrir el modal de pago de membresía.
-        const paymentModal = bootstrap.Modal.getOrCreateInstance(
-            document.getElementById("paymentModal")
+        mostrarModal(
+            "Membresía vencida",
+            "Necesitás una membresía activa para iniciar un alquiler.",
+            "warning"
         );
-
-        paymentModal.show();
 
         return false;
     }
 
-    console.log(
-        "Membresía activa:",
-        membresia.tipo_plan,
-        "Vigente hasta:",
-        new Date(membresia.fecha_fin).toLocaleDateString("es-AR")
-    );
-
-    // Verificar el tiempo disponible del usuario para hoy.
+    // 7. Verificar tiempo disponible del día.
     try {
         const tiempoDisponible =
             await actualizarTiempoDisponibleHoy();
 
         if (tiempoDisponible <= 0) {
-
             mostrarModal(
                 "Límite diario alcanzado",
                 "Alcanzaste el límite máximo de 8 horas de alquiler por día. Podrás volver a alquilar mañana.",
@@ -898,10 +1415,7 @@ async function rentBike() {
         }
 
     } catch (error) {
-        console.error(
-            "Error al verificar el tiempo disponible:",
-            error
-        );
+        console.error("Error al verificar el tiempo disponible:", error);
 
         mostrarModal(
             "Error al verificar el tiempo disponible",
@@ -912,85 +1426,73 @@ async function rentBike() {
         return false;
     }
 
-    const origen = document.getElementById("origen").value;
-    const destino = document.getElementById("destino").value;
-    const boton = document.getElementById("btnAlquilar");
-
-
-
-    if (origen === destino) {
-        mostrarModal("Ruta inválida", "Elegí dos estaciones distintas.", "warning");
-        return false;
-    }
-
-    if (!estaciones[origen] || estaciones[origen].bicis === 0) {
-        mostrarModal(
-            "Sin disponibilidad",
-            "No hay bicicletas disponibles en esta estación.",
-            "warning"
-        );
-        return false;
-    }
-
-    const km = obtenerDistancia(origen, destino);
-
-    if (km === null) {
-        mostrarModal(
-            "Ruta no disponible",
-            "No hay distancia registrada para esa ruta.",
-            "danger"
-        );
-        return false;
-    }
-
+    // 8. Confirmar alquiler mediante Supabase.
     boton.disabled = true;
     boton.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
         Alquilando bicicleta...
     `;
 
-try {
-    const { data, error } = await supabaseClient.rpc(
-        "iniciar_alquiler",
-        {
-            p_estacion_origen_id: estaciones[origen].id,
-            p_estacion_destino_id: estaciones[destino].id,
-            p_tipo_plan: tipoPlanSeleccionado
-        }
-    );
+    try {
+        const { data, error } = await supabaseClient.rpc(
+            "iniciar_alquiler",
+            {
+                p_estacion_origen_id: estaciones[origen].id,
+                p_bicicleta_id: bicicletaSeleccionada.id,
+                p_qr_codigo: bicicletaSeleccionada.qr_codigo
+            }
+        );
 
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            throw new Error("Supabase no devolvió los datos del alquiler.");
+            throw new Error(
+                "Supabase no devolvió los datos del alquiler."
+            );
         }
 
         const alquiler = data[0];
 
-        // Guardamos temporalmente los datos del viaje activo en memoria.
+        // 9. Registrar el viaje activo en memoria.
         viajeActivo = {
             id: alquiler.viaje_id,
             bicicletaId: alquiler.bicicleta_id,
             bicicletaCodigo: alquiler.bicicleta_codigo,
             inicio: alquiler.inicio,
             origen: origen,
-            destino: destino,
+            destino: "A definir al devolver",
             estado: alquiler.estado
         };
 
+        console.log("Alquiler registrado correctamente:", alquiler);
+
+        // 10. Actualizar estaciones y disponibilidad.
         await cargarEstacionesDesdeSupabase();
+
         actualizarSelectEstaciones();
         renderEstaciones();
 
-        const rentModal = bootstrap.Modal.getInstance(
-            document.getElementById("rentBikeModal")
-        );
+        // 11. Limpiar selección y estado del QR.
+        bicicletaSeleccionada = null;
+        qrVerificado = false;
 
-        if (rentModal) rentModal.hide();
+        // 12. Cerrar el modal de alquiler.
+        const rentModalElement =
+            document.getElementById("rentBikeModal");
 
+        const rentModal =
+            bootstrap.Modal.getInstance(rentModalElement);
+
+        if (rentModal) {
+            rentModal.hide();
+        }
+
+        // 13. Mostrar el viaje activo y actualizar el tiempo.
         mostrarViajeActivo();
+        await actualizarTiempoDisponibleHoy();
 
-        const successModal = new bootstrap.Modal(
+        // 14. Mostrar confirmación.
+        const successModal = bootstrap.Modal.getOrCreateInstance(
             document.getElementById("successModal")
         );
 
@@ -1011,16 +1513,37 @@ try {
             "danger"
         );
 
+        // Actualizar disponibilidad por si la bicicleta
+        // fue alquilada por otro usuario.
+        try {
+
+            qrVerificado = false;
+
+            await cargarEstacionesDesdeSupabase();
+            actualizarSelectEstaciones();
+            renderEstaciones();
+            mostrarBicicletasDisponibles();
+        } catch (errorActualizacion) {
+            console.error(
+                "Error al actualizar las bicicletas:",
+                errorActualizacion
+            );
+        }
+
         return false;
 
     } finally {
-        boton.disabled = false;
         boton.innerHTML = "Confirmar Alquiler";
+        boton.disabled = !(bicicletaSeleccionada && qrVerificado);
     }
 }
 
 
+
+
 async function cargarViajeActivoDesdeSupabase() {
+
+    // 1. Buscar el viaje que todavía está en curso.
     const { data, error } = await supabaseClient
         .from("viajes")
         .select("*")
@@ -1030,11 +1553,13 @@ async function cargarViajeActivoDesdeSupabase() {
 
     if (error) throw error;
 
+    // Si no hay viaje activo, no hay nada que recuperar.
     if (!data) {
         viajeActivo = null;
         return null;
     }
 
+    // 2. Consultar la bicicleta del viaje.
     const { data: bicicleta, error: errorBicicleta } =
         await supabaseClient
             .from("bicicletas")
@@ -1044,6 +1569,7 @@ async function cargarViajeActivoDesdeSupabase() {
 
     if (errorBicicleta) throw errorBicicleta;
 
+    // 3. Consultar la estación de origen.
     const { data: origen, error: errorOrigen } =
         await supabaseClient
             .from("estaciones")
@@ -1053,22 +1579,31 @@ async function cargarViajeActivoDesdeSupabase() {
 
     if (errorOrigen) throw errorOrigen;
 
-    const { data: destino, error: errorDestino } =
-        await supabaseClient
-            .from("estaciones")
-            .select("nombre")
-            .eq("id", data.estacion_destino_id)
-            .single();
+    // 4. El destino todavía puede ser NULL si el viaje sigue activo.
+    let nombreDestino = "A definir al devolver";
 
-    if (errorDestino) throw errorDestino;
+    if (data.estacion_destino_id !== null) {
 
+        const { data: destino, error: errorDestino } =
+            await supabaseClient
+                .from("estaciones")
+                .select("nombre")
+                .eq("id", data.estacion_destino_id)
+                .single();
+
+        if (errorDestino) throw errorDestino;
+
+        nombreDestino = destino.nombre;
+    }
+
+    // 5. Reconstruir el viaje activo.
     viajeActivo = {
         id: data.id,
         bicicletaId: data.bicicleta_id,
         bicicletaCodigo: bicicleta.codigo,
         inicio: data.inicio,
         origen: origen.nombre,
-        destino: destino.nombre,
+        destino: nombreDestino,
         estado: data.estado
     };
 
@@ -1175,12 +1710,14 @@ function mostrarViajeActivo() {
     const selector = document.getElementById("estacionDevolucion");
 
     if (!viajeActivo) {
+        actualizarBotonAlquiler();
         tarjeta.classList.add("d-none");
         detenerRelojViaje();
         return;
     }
 
     tarjeta.classList.remove("d-none");
+    actualizarBotonAlquiler();
 
     document.getElementById("bicicletaActiva").textContent =
         viajeActivo.bicicletaCodigo;
@@ -1226,11 +1763,22 @@ function detenerRelojViaje() {
     }
 }
 
+
 function actualizarRelojViaje() {
     if (!viajeActivo) return;
 
     const inicio = new Date(viajeActivo.inicio).getTime();
-    const transcurrido = Date.now() - inicio;
+
+    // Validar que la fecha de inicio sea correcta.
+    if (!Number.isFinite(inicio)) {
+        document.getElementById("relojViaje").textContent =
+            "--:--:--";
+        return;
+    }
+
+    // Evitar que una pequeña diferencia entre relojes
+    // genere valores negativos.
+    const transcurrido = Math.max(0, Date.now() - inicio);
 
     const horas = Math.floor(transcurrido / 3600000);
     const minutos = Math.floor((transcurrido % 3600000) / 60000);
@@ -1253,6 +1801,7 @@ function actualizarRelojViaje() {
             "🟢 Tiempo máximo por viaje: 60 minutos.";
     }
 }
+
 
 async function finalizarViaje() {
     if (!viajeActivo) {
@@ -1303,6 +1852,7 @@ async function finalizarViaje() {
 
         viajeActivo = null;
         detenerRelojViaje();
+        actualizarBotonAlquiler();
 
         await actualizarTiempoDisponibleHoy();
 
@@ -1329,7 +1879,8 @@ async function finalizarViaje() {
 
     } finally {
         boton.disabled = false;
-        boton.innerHTML = "🚲 Finalizar viaje";
+        boton.innerHTML =
+        `${iconoBicicleta("me-2")} Finalizar viaje`;
     }
 }
 
@@ -1869,7 +2420,38 @@ function eliminarHistorial() {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // Verificar la sesión real de Supabase.
+    // Identificar si estamos en la aplicación privada.
+    const rutaActual = window.location.pathname;
+
+    const esPaginaPrivada =
+        rutaActual.endsWith("/index.html") ||
+        rutaActual === "/" ||
+        rutaActual.endsWith("/");
+
+    // ============================================
+    // PÁGINA PÚBLICA: app.html
+    // ============================================
+
+    if (!esPaginaPrivada) {
+
+        try {
+            await cargarEstacionesDesdeSupabase();
+            renderEstaciones();
+
+        } catch (error) {
+            console.error(
+                "Error al cargar el mapa público:",
+                error
+            );
+        }
+
+        return;
+    }
+
+    // ============================================
+    // APLICACIÓN PRIVADA: index.html
+    // ============================================
+
     const sesionValida = await verificarSesion();
 
     if (!sesionValida) {
@@ -1887,11 +2469,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     viajeActivo = null;
 
 
+
+
     // Actualizar el estado de membresía al abrir el modal.
     const rentBikeModal = document.getElementById("rentBikeModal");
 
     rentBikeModal.addEventListener("show.bs.modal", () => {
-        actualizarVistaMembresiaAlquiler();
+    actualizarVistaMembresiaAlquiler();
+    mostrarPasoAlquiler(1);
     });
 
 
@@ -1912,6 +2497,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // La estación de origen se cargará dinámicamente desde Supabase.
 
     
+    // Navegación entre los pasos del alquiler.
+    document
+        .getElementById("btnContinuarPaso")
+        .addEventListener("click", avanzarPasoAlquiler);
+
+    document
+        .getElementById("btnPasoAnterior")
+        .addEventListener("click", retrocederPasoAlquiler);
+
+    // Estado inicial del flujo.
+    mostrarPasoAlquiler(1);
+
     try {
         await cargarEstacionesDesdeSupabase();
         await cargarViajeActivoDesdeSupabase();
@@ -1950,19 +2547,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     document.getElementById("origen").addEventListener("change", () => {
 
-    ubicacionVerificada = false;
+        ubicacionVerificada = false;
+        document.getElementById("btnContinuarPaso").disabled = true;
+        limpiarSeleccionBicicleta();
 
-    const estado = document.getElementById("estadoGeolocalizacion");
-    const boton = document.getElementById("btnGeolocalizacion");
+        const estado = document.getElementById("estadoGeolocalizacion");
+        const boton = document.getElementById("btnGeolocalizacion");
 
-    estado.textContent =
-        "Necesitamos verificar tu ubicación para continuar.";
+        estado.textContent =
+            "Necesitamos verificar tu ubicación para continuar.";
 
-    estado.className = "alert alert-info mt-2 mb-0";
+        estado.className = "alert alert-info mt-2 mb-0";
 
-    boton.disabled = false;
-    boton.textContent = "📍 Verificar mi ubicación";
-    });
+        boton.disabled = false;
+        boton.textContent = "📍 Verificar mi ubicación";
+        mostrarPasoAlquiler(1);
+        });
+
+    document.getElementById("btnEscanearQR")
+    .addEventListener("click", escanearQR);
+    document.getElementById("btnValidarQRModal")
+    .addEventListener("click", validarQRPopup);
 
     // Renderizado de la aplicación.
     renderTrips();
@@ -1970,4 +2575,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderEstaciones();
     actualizarSelectEstaciones();
     mostrarViajeActivo();
+    actualizarBotonAlquiler();
+
 });
