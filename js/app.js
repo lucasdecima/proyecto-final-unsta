@@ -390,7 +390,16 @@ function seleccionarBicicleta(bicicleta) {
         bicicleta.codigo;
 
     // Mostrar sección QR
-    document.getElementById("contenedorQR").classList.remove("d-none");
+    const contenedorQR = document.getElementById("contenedorQR");
+    contenedorQR.classList.remove("d-none");
+
+    // Desplazarse automáticamente hasta la verificación QR
+    requestAnimationFrame(() => {
+        contenedorQR.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
 
     // Reiniciar resultado visual
     const resultado = document.getElementById("resultadoQR");
@@ -405,19 +414,6 @@ function seleccionarBicicleta(bicicleta) {
 
     console.log("Bicicleta seleccionada:", bicicleta);
 }
-
-function actualizarIntentosQR() {
-    if (!bicicletaSeleccionada) return;
-
-    const intentosRealizados =
-        intentosQRPorBicicleta[bicicletaSeleccionada.id] || 0;
-
-    const disponibles = 3 - intentosRealizados;
-
-    document.getElementById("intentosQR").textContent =
-        `Intentos disponibles: ${disponibles}`;
-}
-
 
 function escanearQR() {
     if (!bicicletaSeleccionada || qrVerificado) return;
@@ -446,7 +442,17 @@ function escanearQR() {
     ).show();
 }
 
+function actualizarIntentosQR() {
+    if (!bicicletaSeleccionada) return;
 
+    const intentosRealizados =
+        intentosQRPorBicicleta[bicicletaSeleccionada.id] || 0;
+
+    const disponibles = 3 - intentosRealizados;
+
+    document.getElementById("intentosQR").textContent =
+        `Intentos disponibles: ${disponibles}`;
+}
 
 function validarQRPopup() {
     if (!bicicletaSeleccionada || qrVerificado) return;
