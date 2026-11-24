@@ -1412,9 +1412,6 @@ function actualizarBotonAlquiler() {
     }
 }
 
-
-
-
 async function rentBike() {
 
     const boton = document.getElementById("btnAlquilar");
@@ -1592,12 +1589,14 @@ async function rentBike() {
         await actualizarTiempoDisponibleHoy();
 
         // 14. Mostrar confirmación.
+        document.getElementById("bicicletaConfirmada").textContent =
+        viajeActivo.bicicletaCodigo || `ID: ${viajeActivo.bicicletaId}`;
+
         const successModal = bootstrap.Modal.getOrCreateInstance(
-            document.getElementById("successModal")
-        );
+        document.getElementById("successModal")
+    );
 
         successModal.show();
-
         setTimeout(() => {
             successModal.hide();
         }, 2500);
