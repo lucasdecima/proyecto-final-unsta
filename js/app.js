@@ -2168,18 +2168,36 @@ function abrirEncuesta(encuestaId) {
     modal.show();
 }
 
+
 function invitarAResponderEncuesta(encuestaId) {
 
-    const responder = confirm(
-        "¡Gracias por utilizar P&L BIKE!\n\n" +
-        "Tu opinión nos ayuda a mejorar el servicio.\n\n" +
-        "¿Querés responder ahora la encuesta de satisfacción?"
+    const modal = document.getElementById("encuestaInvitacionModal");
+
+    modal.dataset.encuestaId = encuestaId;
+
+    const instancia = bootstrap.Modal.getOrCreateInstance(modal);
+
+    instancia.show();
+}
+
+
+function responderEncuestaInvitacion() {
+
+    const modal = document.getElementById("encuestaInvitacionModal");
+
+    const encuestaId = modal.dataset.encuestaId;
+
+    modal.addEventListener(
+        "hidden.bs.modal",
+        function () {
+            abrirEncuesta(encuestaId);
+        },
+        { once: true }
     );
 
-    if (responder) {
-        abrirEncuesta(encuestaId);
-    }
+    bootstrap.Modal.getInstance(modal).hide();
 }
+
 
 async function guardarRespuestaEncuesta() {
 
