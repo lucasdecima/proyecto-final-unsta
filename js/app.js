@@ -781,10 +781,6 @@ mostrarModal(
     }
 }
 
-
-
-
-
 // =========================
 // CONFIGURACIÓN DE ALQUILER
 // =========================
@@ -807,8 +803,6 @@ let estaciones = {}
 
 let mapaLeaflet = null;
 let marcadoresEstaciones = {};
-
-
 
 
 // Inicializar mapa interactivo
@@ -873,7 +867,6 @@ function crearIconoEstacionPublica() {
         popupAnchor: [0, -48]
     });
 }
-
 
 // ============================================
 // CREAR MARCADORES DE LAS ESTACIONES
@@ -946,10 +939,6 @@ function actualizarMarcadoresMapa() {
 // Coordenadas de las estaciones cargadas desde Supabase
 let coordenadasEstaciones = {};
 
-
-
-
-
 const distancias = {
     "Plaza Independencia": {
         "Parque 9 de Julio": 3.2,
@@ -1019,7 +1008,6 @@ function mostrarPasoAlquiler(paso) {
         actualizarResumenAlquiler();
     }
 }
-
 
 function avanzarPasoAlquiler() {
 
@@ -1917,7 +1905,9 @@ function actualizarRelojViaje() {
 }
 
 
+
 async function finalizarViaje() {
+
     if (!viajeActivo) {
         mostrarModal(
             "No hay un viaje activo",
@@ -1949,7 +1939,6 @@ async function finalizarViaje() {
 
     try {
 
-        // Guardamos el ID del viaje antes de limpiar viajeActivo.
         const viajeId = viajeActivo.id;
 
         const { data, error } = await supabaseClient.rpc(
@@ -1980,56 +1969,76 @@ async function finalizarViaje() {
 
         document.getElementById("viajeActivoCard").classList.add("d-none");
 
+        // Consultar si se generó una encuesta pendiente.
+        let encuestaPendiente = null;
+
+        try {
+
+            const { data: encuestas, error: errorEncuestas } =
+                await supabaseClient
+                    .from("encuestas_satisfaccion")
+                    .select("id")
+                    .eq("viaje_id", viajeId)
+                    .eq("usuario_id", usuario.id)
+                    .eq("estado", "pendiente")
+                    .maybeSingle();
+
+            if (errorEncuestas) throw errorEncuestas;
+
+            encuestaPendiente = encuestas;
+
+            await cargarEncuestasPendientesDesdeSupabase();
+
+        } catch (errorEncuestas) {
+
+            console.error(
+                "Error al actualizar las encuestas pendientes:",
+                errorEncuestas
+            );
+
+        }
+
+        // Preparar la espera antes de mostrar la confirmación.
+        const modalDevolucion = document.getElementById("messageModal");
+
+        const modalCerrado = encuestaPendiente
+            ? new Promise(resolve => {
+                modalDevolucion.addEventListener(
+                    "hidden.bs.modal",
+                    resolve,
+                    { once: true }
+                );
+            })
+            : null;
+
+        // Mostrar confirmación de devolución.
         mostrarModal(
             "¡Devolución exitosa!",
-
-            
             `La bicicleta fue devuelta correctamente. Distancia recorrida: ${resultado.km} km.`,
             "success"
         );
 
-        // Actualizar las encuestas generadas al finalizar el viaje.
-        try {
-
-            const { data: encuestas, error } = await supabaseClient
-            .from("encuestas_satisfaccion")
-            .select("id")
-            .eq("viaje_id", viajeId)
-            .eq("usuario_id", usuario.id)
-            .eq("estado", "pendiente")
-            .maybeSingle();
-
-        if (error) throw error;
-
-        await cargarEncuestasPendientesDesdeSupabase();
-
-        // Invitar a responder la encuesta del viaje recién finalizado.
-        if (encuestas) {
-        invitarAResponderEncuesta(encuestas.id);
+        // Invitar a responder únicamente después de cerrar el mensaje.
+        if (encuestaPendiente) {
+            await modalCerrado;
+            invitarAResponderEncuesta(encuestaPendiente.id);
         }
 
-        }catch (error) {
-
-        console.error(
-        "Error al actualizar las encuestas pendientes:",
-        error
-        );
-
-    }
-
     } catch (error) {
+
         console.error("Error al finalizar el viaje:", error);
 
         mostrarModal(
-            "No se pudo finalizar el viaje",
-            error.message || "Ocurrió un error al registrar la devolución.",
+            "Error al finalizar el viaje",
+            error.message || "No se pudo registrar la devolución. Intentá nuevamente.",
             "danger"
         );
 
     } finally {
+
         boton.disabled = false;
-        boton.innerHTML =
-        `${iconoBicicleta("me-2")} Finalizar viaje`;
+        boton.textContent = "Finalizar viaje";
+
     }
 }
 
