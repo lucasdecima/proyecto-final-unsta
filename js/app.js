@@ -104,6 +104,43 @@ async function consultarMembresiaActiva() {
 }
 
 
+async function actualizarEstadoMembresiaHome() {
+
+    const estado = document.getElementById("estadoMembresiaHome");
+
+    if (!estado) return;
+
+    try {
+
+        const membresia = await consultarMembresiaActiva();
+
+        if (membresia) {
+
+            const plan = PLANES_MEMBRESIA[membresia.tipo_plan];
+
+            estado.textContent =
+                `${plan?.nombre || "Membresía activa"} - Vigente hasta el ${new Date(membresia.fecha_fin).toLocaleDateString("es-AR")}.`;
+
+        } else {
+
+            estado.textContent =
+                "No tenés una membresía activa.";
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error al consultar la membresía del inicio:",
+            error
+        );
+
+        estado.textContent =
+            "No pudimos consultar tu membresía.";
+
+    }
+}
+
 async function actualizarVistaMembresiaAlquiler() {
     const estadoMembresia = document.getElementById("estadoMembresiaAlquiler");
     const flujoAlquiler = document.getElementById("contenedorFlujoAlquiler");
@@ -1566,6 +1603,7 @@ async function rentBike() {
             destino: "A definir al devolver",
             estado: alquiler.estado
         };
+        actualizarIndicadoresActividadHoy();
 
         console.log("Alquiler registrado correctamente:", alquiler);
 
@@ -1713,6 +1751,93 @@ async function cargarViajeActivoDesdeSupabase() {
     };
 
     return viajeActivo;
+}
+
+
+function actualizarIndicadoresActividadHoy() {
+    const ahora = new Date();
+
+    const inicioDia = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate()
+    );
+
+    const inicioManana = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate() + 1
+    );
+
+    // Viajes finalizados durante el día de hoy.
+    const alquileresFinalizadosHoy = trips.filter(viaje => {
+        if (!viaje.fin) return false;
+
+        const fechaFin = new Date(viaje.fin);
+
+        return fechaFin >= inicioDia && fechaFin < inicioManana;
+    }).length;
+
+    // Viajes en curso del usuario actual.
+    const alquileresEnCurso = viajeActivo ? 1 : 0;
+
+    const elementoFinalizados =
+        document.getElementById("alquileresFinalizadosHoy");
+
+    const elementoEnCurso =
+        document.getElementById("alquileresEnCurso");
+
+    if (elementoFinalizados) {
+        elementoFinalizados.textContent = alquileresFinalizadosHoy;
+    }
+
+    if (elementoEnCurso) {
+        elementoEnCurso.textContent = alquileresEnCurso;
+    }
+}
+
+
+
+function actualizarIndicadoresActividadHoy() {
+    const ahora = new Date();
+
+    const inicioDia = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate()
+    );
+
+    const inicioManana = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate() + 1
+    );
+
+    // Contar viajes finalizados durante el día de hoy.
+    const alquileresFinalizadosHoy = trips.filter(viaje => {
+        if (!viaje.fin) return false;
+
+        const fechaFin = new Date(viaje.fin);
+
+        return fechaFin >= inicioDia && fechaFin < inicioManana;
+    }).length;
+
+    // Contar si el usuario tiene un alquiler actualmente en curso.
+    const alquileresEnCurso = viajeActivo ? 1 : 0;
+
+    const elementoFinalizados =
+        document.getElementById("alquileresFinalizadosHoy");
+
+    const elementoEnCurso =
+        document.getElementById("alquileresEnCurso");
+
+    if (elementoFinalizados) {
+        elementoFinalizados.textContent = alquileresFinalizadosHoy;
+    }
+
+    if (elementoEnCurso) {
+        elementoEnCurso.textContent = alquileresEnCurso;
+    }
 }
 
 
@@ -1969,6 +2094,7 @@ async function finalizarViaje() {
         await actualizarTiempoDisponibleHoy();
 
         await cargarEstacionesDesdeSupabase();
+        actualizarIndicadoresActividadHoy
         actualizarSelectEstaciones();
         renderEstaciones();
 
@@ -2607,25 +2733,61 @@ async function actualizarTiempoDisponibleHoy() {
         (tiempoRestante % 3600) / 60
     );
 
-    const elementoTiempo =
-        document.getElementById("tiempoDisponibleHoy");
+    const elementoTiempoHome =
+        document.getElementById("tiempoDisponibleHoyHome");
 
-    if (!membresia) {
+    const elementoTiempoPerfil =
+        document.getElementById("tiempoDisponibleHoyPerfil");
 
-        elementoTiempo.textContent =
-            "Requiere membresía activa";
+    const textoTiempo = !membresia
+        ? "Requiere membresía activa"
+        : `${horas} h ${minutos} min`;
 
-    } else {
+    if (elementoTiempoHome) {
+        elementoTiempoHome.textContent = textoTiempo;
+    }
 
-        elementoTiempo.textContent =
-            `${horas} h ${minutos} min`;
-
+    if (elementoTiempoPerfil) {
+        elementoTiempoPerfil.textContent = textoTiempo;
     }
 
     return tiempoRestante;
 }
 
 
+async function actualizarBicicletasAlquiladasHoy() {
+
+    const ahora = new Date();
+
+    const inicioDia = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate()
+    );
+
+    const inicioManana = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate() + 1
+    );
+
+    const { count, error } = await supabaseClient
+        .from("viajes")
+        .select("id", { count: "exact", head: true })
+        .gte("inicio", inicioDia.toISOString())
+        .lt("inicio", inicioManana.toISOString())
+        .in("estado", ["finalizado", "en_curso"]);
+
+    if (error) throw error;
+
+    const elemento = document.getElementById(
+        "bicicletasAlquiladasHoy"
+    );
+
+    if (elemento) {
+        elemento.textContent = count ?? 0;
+    }
+}
 
 
 
@@ -2870,6 +3032,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    actualizarEstadoMembresiaHome();
     claveViajeActivo = null;
     viajeActivo = null;
 
@@ -2961,6 +3124,7 @@ document
         await cargarHistorialDesdeSupabase();
         await actualizarTiempoDisponibleHoy();
         iniciarActualizacionTiempoDisponible();
+        actualizarIndicadoresActividadHoy();
 
         } catch (error) {
         console.error("Error al cargar datos desde Supabase:", error);

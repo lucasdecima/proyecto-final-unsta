@@ -148,63 +148,86 @@
     </div>
 
 
-    <!-- ACTIVIDAD DE HOY -->
-    <div class="card shadow-sm border-0 mb-4">
 
-        <div class="card-body p-4">
+<!-- ACTIVIDAD DE HOY -->
+<div class="card shadow-sm border-0 mb-4">
 
-            <h4 class="fw-bold mb-3">
-                Tu actividad de hoy
-            </h4>
+    <div class="card-body p-4">
 
-            <div class="row g-3">
+        <h4 class="fw-bold mb-3">
+            Tu actividad de hoy
+        </h4>
 
-                <div class="col-6">
+        <div class="row g-3">
 
-                    <div class="bg-light rounded p-3 text-center h-100">
+            <!-- TIEMPO DISPONIBLE -->
+            <div class="col-12 col-md-4">
 
-                        <h2
-                            class="fw-bold text-success mb-1"
-                            id="tiempoDisponibleHome">
-                            8 hs
-                        </h2>
+                <div class="bg-light rounded p-3 text-center h-100">
 
-                        <span class="text-muted small">
-                            Tiempo disponible*
-                        </span>
+                    <h2
+                        class="fw-bold text-success mb-1"
+                        id="tiempoDisponibleHoyHome">
+                        8 hs
+                    </h2>
 
-                    </div>
-
-                </div>
-
-                <div class="col-6">
-
-                    <div class="bg-light rounded p-3 text-center h-100">
-
-                        <h2
-                            class="fw-bold text-success mb-1"
-                            id="bicicletasSistemaHome">
-                            30
-                        </h2>
-
-                        <span class="text-muted small">
-                            Bicicletas en el sistema
-                        </span>
-
-                    </div>
+                    <span class="text-muted small">
+                        Tiempo disponible*
+                    </span>
 
                 </div>
 
             </div>
 
-            <small class="text-muted d-block mt-3">
-                *El tiempo disponible se actualizará según los
-                viajes realizados durante el día.
-            </small>
+            <!-- ALQUILERES FINALIZADOS HOY -->
+            <div class="col-6 col-md-4">
+
+                <div class="bg-light rounded p-3 text-center h-100">
+
+                    <h2
+                        class="fw-bold text-success mb-1"
+                        id="alquileresFinalizadosHoy">
+                        0
+                    </h2>
+
+                    <span class="text-muted small">
+                        Alquileres finalizados hoy
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- ALQUILERES EN CURSO -->
+            <div class="col-6 col-md-4">
+
+                <div class="bg-light rounded p-3 text-center h-100">
+
+                    <h2
+                        class="fw-bold text-success mb-1"
+                        id="alquileresEnCurso">
+                        0
+                    </h2>
+
+                    <span class="text-muted small">
+                        Alquileres en curso
+                    </span>
+
+                </div>
+
+            </div>
 
         </div>
 
+        <small class="text-muted d-block mt-3">
+            *El tiempo disponible se actualizará según los
+            viajes realizados durante el día.
+        </small>
+
     </div>
+
+</div>
+
 
 
     <!-- VIAJE EN CURSO -->
@@ -506,7 +529,7 @@
 
                 <p class="mb-0">
                     <strong>Tiempo disponible hoy:</strong>
-                    <span id="tiempoDisponibleHoy">8 horas</span>
+                    <span id="tiempoDisponibleHoyPerfil">8 horas</span>
                 </p>
 
             </div>
