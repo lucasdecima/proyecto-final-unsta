@@ -853,3 +853,74 @@ footer .text-center.p-3{
     margin: 0 auto;
     border-radius: 15px;
 }
+
+
+
+/* ========================================
+   PANEL DE ADMINISTRACIÓN
+======================================== */
+
+/* Navbar */
+.admin-navbar {
+    background-color: var(--pl-pine);
+}
+
+/* Bienvenida */
+.admin-hero {
+    background: linear-gradient(
+        135deg,
+        var(--pl-pine-dark),
+        var(--pl-pine)
+    );
+    color: white;
+    border-radius: 16px;
+}
+
+/* Título de bienvenida */
+.admin-hero h1,
+.admin-hero h1 span {
+    color: #ffffff;
+}
+
+/* Tarjetas de indicadores */
+.admin-stat-card {
+    border: none;
+    border-radius: 14px;
+    transition: transform 0.2s ease;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Iconos de indicadores */
+.admin-stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background-color: rgba(31, 111, 84, 0.12);
+    color: var(--pl-pine);
+    font-size: 1.5rem;
+}
+
+/* Tarjetas de gestión */
+.admin-section-card {
+    border: none;
+    border-radius: 14px;
+    height: 100%;
+}
+
+/* Iconos de secciones */
+.admin-section-icon {
+    font-size: 2rem;
+    color: var(--pl-pine);
+}
+
+/* Footer */
+.admin-footer {
+    background-color: var(--pl-pine-dark);
+    color: white;
+}
