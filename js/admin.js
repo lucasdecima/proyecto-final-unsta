@@ -178,10 +178,11 @@ if (errorEstaciones) throw errorEstaciones;
 document.getElementById("totalUsuariosAdmin").textContent =
 totalUsuarios ?? 0;
 
+// BICICLETAS (30 reales + 5 simuladas)
+const totalBicicletasSistema = (totalBicicletas ?? 0) + 5;
 
-// BICICLETAS
 document.getElementById("totalBicicletasAdmin").textContent =
-totalBicicletas ?? 0;
+    totalBicicletasSistema;
 
 
 // TOTAL DE ENCUESTAS RECIBIDAS
@@ -213,19 +214,15 @@ document.getElementById("totalUsuariosComunesAdmin").textContent =
 document.getElementById("totalMembresiasActivasAdmin").textContent =
     totalMembresiasActivas ?? 0;
 
-
 // BICICLETAS Y ESTACIONES
 document.getElementById("totalBicicletasDetalleAdmin").textContent =
-    totalBicicletas ?? 0;
+    totalBicicletasSistema;
 
 document.getElementById("bicicletasDisponiblesAdmin").textContent =
     bicicletasDisponibles ?? 0;
 
 document.getElementById("bicicletasAlquiladasAdmin").textContent =
-    bicicletasAlquiladas ?? 0;
-
-document.getElementById("totalEstacionesAdmin").textContent =
-    totalEstaciones ?? 0;
+    (bicicletasAlquiladas ?? 0) + 5;
 
 
 // VERIFICACIÓN

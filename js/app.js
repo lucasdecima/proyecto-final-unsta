@@ -3114,44 +3114,50 @@ function moverBicicletasAnimadas() {
 
 function moverBicicletasAnimadas() {
 
+    const estacionesRuta = Object.values(coordenadasEstaciones)
+        .filter(coordenadas =>
+            Array.isArray(coordenadas) &&
+            coordenadas.length === 2 &&
+            Number.isFinite(Number(coordenadas[0])) &&
+            Number.isFinite(Number(coordenadas[1]))
+        );
+
+    if (estacionesRuta.length < 2) return;
+
     bicicletasAnimadas.forEach(bicicleta => {
 
-        const origen = bicicleta.coordenadas[bicicleta.tramo];
+        // Avanzar el recorrido.
+        bicicleta.progreso += 0.002;
 
-        const siguienteTramo =
-            (bicicleta.tramo + 1) % bicicleta.coordenadas.length;
+        // Si llegó a la siguiente estación, actualizar el tramo.
+        while (bicicleta.progreso >= 1) {
+            bicicleta.progreso -= 1;
 
-        const destino = bicicleta.coordenadas[siguienteTramo];
-
-        // Velocidad de desplazamiento.
-        bicicleta.progreso += 0.0015;
-
-        if (bicicleta.progreso >= 1) {
-            bicicleta.progreso = 0;
-            bicicleta.tramo = siguienteTramo;
-
-            const nuevoDestino =
-                bicicleta.ruta[
-                    (bicicleta.tramo + 1) % bicicleta.ruta.length
-                ];
-
-            bicicleta.marcador.setPopupContent(
-                `<strong>🚲 Bicicleta en movimiento</strong>
-                 <br>Destino estimado: ${nuevoDestino}`
-            );
+            bicicleta.estacionActual =
+                (bicicleta.estacionActual + 1) % estacionesRuta.length;
         }
 
-        // Interpolación entre las coordenadas.
-        const lat = origen.lat +
-            (destino.lat - origen.lat) * bicicleta.progreso;
+        const origen = estacionesRuta[bicicleta.estacionActual];
 
-        const lng = origen.lng +
-            (destino.lng - origen.lng) * bicicleta.progreso;
+        const siguienteIndice =
+            (bicicleta.estacionActual + 1) % estacionesRuta.length;
+
+        const destino = estacionesRuta[siguienteIndice];
+
+        // Calcular la posición intermedia.
+        const lat =
+            Number(origen[0]) +
+            (Number(destino[0]) - Number(origen[0])) *
+            bicicleta.progreso;
+
+        const lng =
+            Number(origen[1]) +
+            (Number(destino[1]) - Number(origen[1])) *
+            bicicleta.progreso;
 
         bicicleta.marcador.setLatLng([lat, lng]);
     });
 }
-
 
 
  //======================================================
