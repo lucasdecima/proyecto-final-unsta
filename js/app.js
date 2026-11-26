@@ -3048,7 +3048,7 @@ function iniciarBicicletasAnimadas() {
         ).addTo(mapaLeaflet);
 
         marcador.bindPopup(
-            "<strong>Bicicleta en movimiento</strong><br>Recorrido simulado"
+            "<strong>Bicicleta en movimiento</strong><br>"
         );
 
         bicicletasAnimadas.push({
