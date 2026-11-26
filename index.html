@@ -1624,71 +1624,6 @@ aria-hidden="true">
 
 
 
-<footer class="bg-success text-white text-center mt-auto">
-    
-    <div class="container p-4">
-  
-      <div class="row">
-  
-        <div class="col-lg-6 col-md-12 mb-4">
-          <h5 class="text-uppercase"><i class="bi bi-bicycle fs-4 text-white"></i> P&L BIKE</h5>
-          <p>
-            Sistema de bicicletas urbanas de San Miguel de Tucumán.
-            Movilidad sostenible, rápida y accesible.
-          </p>
-        </div>
-  
-        <div class="col-lg-3 col-md-6 mb-4">
-          <h5 class="text-uppercase">Secciones</h5>
-  
-          <ul class="list-unstyled mb-0">
-              <li>
-                  <a href="#" 
-                  onclick="showSection('home'); return false;"
-                  class="text-white">
-                  Inicio
-                  </a>
-                  </li>
-                  
-                  <li>
-                  <a href="#" 
-                  onclick="showSection('viajes'); return false;"
-                  class="text-white">
-                  Viajes
-                  </a>
-                  </li>
-                  
-                  <li>
-                  <a href="#" 
-                  onclick="showSection('perfil'); return false;"
-                  class="text-white">
-                  Perfil
-                  </a>
-              </li>
-  
-          </ul>
-        </div>
-  
-        <div class="col-lg-3 col-md-6 mb-4">
-          <h5 class="text-uppercase">Contacto</h5>
-  
-          <ul class="list-unstyled">
-            <li>Email: plbike@demo.com</li>
-            <li>Tucumán, Argentina</li>
-          </ul>
-        </div>
-  
-      </div>
-  
-    </div>
-  
-
-
-
-  <div class="text-center p-3 bg-dark">
-    © 2026 P&L BIKE - Todos los derechos reservados
-  </div>
-</footer>
 
 <!-- Modal Confirmar Cierre de Sesión -->
 <div class="modal fade" id="logoutModal" tabindex="-1">
@@ -1879,6 +1814,111 @@ aria-hidden="true">
     </div>
 </div>
 
+<footer class="bg-success text-white mt-auto">
+
+    <div class="container py-5">
+
+        <div class="row text-center text-md-start">
+
+            <!-- Marca -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <h5 class="text-uppercase fw-bold">
+                    <i class="bi bi-bicycle fs-4 me-2"></i>
+                    P&L BIKE
+                </h5>
+
+                <p class="mb-2">
+                    Sistema de bicicletas urbanas de San Miguel de Tucumán.
+                    Movilidad sostenible, rápida y accesible.
+                </p>
+
+                <small class="opacity-75">
+                    Tu ciudad, tu recorrido, tu bicicleta.
+                </small>
+            </div>
+
+            <!-- Secciones -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase fw-bold mb-3">Secciones</h5>
+
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <a href="#"
+                           onclick="showSection('home'); return false;"
+                           class="text-white text-decoration-none footer-link">
+                            <i class="bi bi-house-door me-2"></i>Inicio
+                        </a>
+                    </li>
+
+                    <li class="mb-2">
+                        <a href="#"
+                           onclick="showSection('viajes'); return false;"
+                           class="text-white text-decoration-none footer-link">
+                            <i class="bi bi-map me-2"></i>Viajes
+                        </a>
+                    </li>
+
+                    <li class="mb-2">
+                        <a href="#"
+                           onclick="showSection('perfil'); return false;"
+                           class="text-white text-decoration-none footer-link">
+                            <i class="bi bi-person me-2"></i>Perfil
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contacto -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="text-uppercase fw-bold mb-3">Contacto</h5>
+
+                <div class="d-flex justify-content-center justify-content-md-start gap-4 mb-3">
+
+                    <a href="https://www.instagram.com/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="text-white fs-3 footer-link"
+                       aria-label="Instagram">
+                        <i class="bi bi-instagram"></i>
+                    </a>
+
+                    <a href="https://www.facebook.com/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="text-white fs-3 footer-link"
+                       aria-label="Facebook">
+                        <i class="bi bi-facebook"></i>
+                    </a>
+
+                    <a href="mailto:plbike@demo.com"
+                       class="text-white fs-3 footer-link"
+                       aria-label="Enviar correo electrónico">
+                        <i class="bi bi-envelope-fill"></i>
+                    </a>
+
+                </div>
+
+                
+
+                <p class="mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Tucumán, Argentina
+                </p>
+            </div>
+
+        </div>
+
+        <hr class="border-white opacity-50">
+
+        <div class="text-center">
+            <small>
+                © 2026 P&L BIKE - Todos los derechos reservados
+            </small>
+        </div>
+
+    </div>
+
+</footer>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

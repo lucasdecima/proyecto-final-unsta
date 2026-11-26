@@ -207,54 +207,66 @@ body{
 
 }
 
-/* =====Footer =====*/
 
-footer{
+/* ========================================
+   FOOTER P&L BIKE
+======================================== */
 
-    margin-top:40px;
-    font-size:.90rem;
-
+footer {
+    margin-top: 40px;
+    font-size: 0.90rem;
+    background-color: var(--pl-pine) !important;
 }
 
-footer .container{
-
-    padding:20px 0 !important;
-
+footer .container {
+    padding-top: 40px !important;
+    padding-bottom: 25px !important;
 }
 
-footer h5{
-
-    font-size:1rem;
-    margin-bottom:10px;
-
+footer h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 18px;
 }
 
 footer p,
-footer li,
-footer a{
-
-    margin-bottom:4px;
-    font-size:.85rem;
-
+footer li {
+    font-size: 0.88rem;
+    line-height: 1.7;
 }
 
-footer ul{
-
-    margin-bottom:0;
-
+footer ul {
+    margin-bottom: 0;
 }
 
-footer .row{
-
-    align-items:flex-start;
-
+footer .row {
+    align-items: flex-start;
 }
 
-footer .text-center.p-3{
+footer a {
+    color: white;
+    text-decoration: none;
+}
 
-    padding:10px !important;
-    font-size:.80rem;
+footer .footer-link {
+    display: inline-block;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
 
+footer .footer-link:hover {
+    opacity: 0.75;
+    transform: translateY(-2px);
+}
+
+footer hr {
+    border-color: white;
+    opacity: 0.35;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+footer .text-center small {
+    font-size: 0.80rem;
 }
 
 /* =========================
