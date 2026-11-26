@@ -1368,6 +1368,7 @@ function renderEstaciones() {
 
     // Actualizar los marcadores con los datos de Supabase.
     actualizarMarcadoresMapa();
+    iniciarBicicletasAnimadas();
 }
 
 
@@ -2093,8 +2094,13 @@ async function finalizarViaje() {
 
         await actualizarTiempoDisponibleHoy();
 
+        // Recargar el historial para incorporar el viaje recién finalizado.
+        await cargarHistorialDesdeSupabase();
+
+        // Actualizar los indicadores de actividad.
+        actualizarIndicadoresActividadHoy();
+
         await cargarEstacionesDesdeSupabase();
-        actualizarIndicadoresActividadHoy
         actualizarSelectEstaciones();
         renderEstaciones();
 
@@ -2979,6 +2985,173 @@ function eliminarHistorial() {
         "warning"
     );
 }
+
+
+
+// ============================================
+// BICICLETAS SIMULADAS EN MOVIMIENTO
+// ============================================
+
+let bicicletasAnimadas = [];
+let intervaloBicicletas = null;
+
+function iniciarBicicletasAnimadas() {
+
+    // Evitar duplicar los cinco marcadores.
+    if (bicicletasAnimadas.length > 0) return;
+
+    if (!mapaLeaflet) return;
+
+    // Tomar directamente las estaciones y coordenadas
+    // cargadas desde Supabase.
+    const estacionesRuta = Object.entries(coordenadasEstaciones)
+        .filter(([nombre, coordenadas]) =>
+            Array.isArray(coordenadas) &&
+            coordenadas.length === 2 &&
+            Number.isFinite(Number(coordenadas[0])) &&
+            Number.isFinite(Number(coordenadas[1]))
+        )
+        .map(([nombre, coordenadas]) => ({
+            nombre,
+            lat: Number(coordenadas[0]),
+            lng: Number(coordenadas[1])
+        }));
+
+    if (estacionesRuta.length < 2) {
+        console.warn("No hay suficientes estaciones para animar bicicletas.");
+        return;
+    }
+
+    // Crear cinco bicicletas simuladas.
+    for (let i = 0; i < 5; i++) {
+
+        const icono = L.divIcon({
+            className: "bicicleta-movil-wrapper",
+            html: `
+                <div class="bicicleta-movil">
+                    ${iconoBicicleta("bicicleta-en-movimiento")}
+                </div>
+            `,
+            iconSize: [40, 30],
+            iconAnchor: [20, 15]
+        });
+
+        const estacionInicial = estacionesRuta[i % estacionesRuta.length];
+
+        const marcador = L.marker(
+            [estacionInicial.lat, estacionInicial.lng],
+            {
+                icon: icono,
+                zIndexOffset: 1000,
+                interactive: true
+            }
+        ).addTo(mapaLeaflet);
+
+        marcador.bindPopup(
+            "<strong>Bicicleta en movimiento</strong><br>Recorrido simulado"
+        );
+
+        bicicletasAnimadas.push({
+            marcador,
+            estacionActual: i % estacionesRuta.length,
+            progreso: i * 0.17
+        });
+    }
+
+    // Iniciar el movimiento continuo.
+    intervaloBicicletas = setInterval(
+        moverBicicletasAnimadas,
+        50
+    );
+
+    console.log("Cinco bicicletas animadas iniciadas.");
+}
+
+
+function moverBicicletasAnimadas() {
+
+    const cantidadEstaciones = Object.keys(coordenadasEstaciones).length;
+
+    const estacionesRuta = Object.values(coordenadasEstaciones)
+        .filter(coordenadas =>
+            Array.isArray(coordenadas) &&
+            coordenadas.length === 2 &&
+            Number.isFinite(Number(coordenadas[0])) &&
+            Number.isFinite(Number(coordenadas[1]))
+        );
+
+    if (estacionesRuta.length < 2) return;
+
+    bicicletasAnimadas.forEach(bicicleta => {
+
+        const origen = estacionesRuta[bicicleta.estacionActual];
+
+        const siguienteIndice =
+            (bicicleta.estacionActual + 1) % estacionesRuta.length;
+
+        const destino = estacionesRuta[siguienteIndice];
+
+        bicicleta.progreso += 0.002;
+
+        if (bicicleta.progreso >= 1) {
+            bicicleta.progreso = 0;
+            bicicleta.estacionActual = siguienteIndice;
+        }
+
+        const lat =
+            Number(origen[0]) +
+            (Number(destino[0]) - Number(origen[0])) *
+            bicicleta.progreso;
+
+        const lng =
+            Number(origen[1]) +
+            (Number(destino[1]) - Number(origen[1])) *
+            bicicleta.progreso;
+
+        bicicleta.marcador.setLatLng([lat, lng]);
+    });
+}
+
+function moverBicicletasAnimadas() {
+
+    bicicletasAnimadas.forEach(bicicleta => {
+
+        const origen = bicicleta.coordenadas[bicicleta.tramo];
+
+        const siguienteTramo =
+            (bicicleta.tramo + 1) % bicicleta.coordenadas.length;
+
+        const destino = bicicleta.coordenadas[siguienteTramo];
+
+        // Velocidad de desplazamiento.
+        bicicleta.progreso += 0.0015;
+
+        if (bicicleta.progreso >= 1) {
+            bicicleta.progreso = 0;
+            bicicleta.tramo = siguienteTramo;
+
+            const nuevoDestino =
+                bicicleta.ruta[
+                    (bicicleta.tramo + 1) % bicicleta.ruta.length
+                ];
+
+            bicicleta.marcador.setPopupContent(
+                `<strong>🚲 Bicicleta en movimiento</strong>
+                 <br>Destino estimado: ${nuevoDestino}`
+            );
+        }
+
+        // Interpolación entre las coordenadas.
+        const lat = origen.lat +
+            (destino.lat - origen.lat) * bicicleta.progreso;
+
+        const lng = origen.lng +
+            (destino.lng - origen.lng) * bicicleta.progreso;
+
+        bicicleta.marcador.setLatLng([lat, lng]);
+    });
+}
+
 
 
  //======================================================

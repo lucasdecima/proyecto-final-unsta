@@ -919,6 +919,31 @@ footer .text-center.p-3{
     color: var(--pl-pine);
 }
 
+
+
+
+/* Bicicletas simuladas en movimiento */
+.bicicleta-movil-wrapper {
+    background: transparent;
+    border: none;
+}
+
+.bicicleta-movil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 30px;
+    background: #ffffff;
+    border: 1px solid #16a34a;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.20);
+}
+
+.icono-bicicleta.bicicleta-en-movimiento {
+    color: #16a34a;
+}
+
 /* Footer */
 .admin-footer {
     background-color: var(--pl-pine-dark);
